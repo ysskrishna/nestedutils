@@ -197,6 +197,14 @@ set_path(data, "a.b.c", 10)
 
 - Python 3.7+
 
+## Development
+
+For development setup, building, and contributing, see [DEVELOPMENT.md](https://github.com/ysskrishna/nestedutils/blob/main/DEVELOPMENT.md).
+
+## Changelog
+
+See [CHANGELOG.md](https://github.com/ysskrishna/nestedutils/blob/main/CHANGELOG.md) for a detailed list of changes and version history.
+
 ## License
 
 MIT License - see [LICENSE](LICENSE) file for details.
