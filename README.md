@@ -6,6 +6,24 @@
 
 A utility library for accessing, setting, and deleting nested paths in Python data structures (dicts, lists, tuples).
 
+## Why nestedutils?
+
+Working with deeply nested data (like JSON API responses) often leads to verbose, error-prone boilerplate:
+
+```python
+# The Standard Way: Verbose and hard to read
+user_name = None
+if data and "users" in data and len(data["users"]) > 0:
+    user = data["users"][0]
+    if "profile" in user:
+        user_name = user["profile"].get("name")
+
+# With nestedutils: Clean, safe, and readable
+from nestedutils import get_path
+
+user_name = get_path(data, "users.0.profile.name")
+```
+
 ## Features
 
 - **Simple Path Syntax**: Use dot-notation strings (`"a.b.c"`) or lists (`["a", "b", "c"]`) to navigate nested structures
@@ -15,6 +33,12 @@ A utility library for accessing, setting, and deleting nested paths in Python da
 - **Flexible Fill Strategies**: Control how missing containers are created with different fill strategies
 - **Type Safety**: Comprehensive error handling with descriptive error messages and error codes
 - **Zero Dependencies**: Pure Python implementation with no external dependencies
+
+## Use Cases
+
+- **JSON API Responses**: Safely extract values from complex, unpredictable JSON responses without dozens of checks.
+- **Configuration Management**: easily read and modify deeply nested settings in configuration dictionaries.
+- **Data Transformation**: Rapidly remap data from one complex structure to another using `get_path` and `set_path`.
 
 ## Installation
 
@@ -213,8 +237,18 @@ MIT License - see [LICENSE](LICENSE) file for details.
 
 Contributions are welcome! Please feel free to submit a Pull Request.
 
+## Support
+
+If you find this library useful, please consider:
+
+- ⭐ **Starring** the repository on GitHub to help others discover it.
+- 💖 **Sponsoring** to support ongoing maintenance and development.
+
+[Become a Sponsor on GitHub](https://github.com/sponsors/ysskrishna) | [Support on Patreon](https://patreon.com/ysskrishna)
+
 ## Links
 
+- **PyPI**: https://pypi.org/project/nestedutils/
 - **Homepage**: https://github.com/ysskrishna/nestedutils
 - **Repository**: https://github.com/ysskrishna/nestedutils.git
 - **Issues**: https://github.com/ysskrishna/nestedutils/issues
