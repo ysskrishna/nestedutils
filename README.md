@@ -1,6 +1,7 @@
 # Nested Utils
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
+![Tests](https://github.com/ysskrishna/nestedutils/actions/workflows/test.yml/badge.svg)
 ![Python](https://img.shields.io/badge/python-3.7%2B-blue.svg)
 [![PyPI](https://img.shields.io/pypi/v/nestedutils)](https://pypi.org/project/nestedutils/)
 
