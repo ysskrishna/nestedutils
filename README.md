@@ -1,5 +1,9 @@
 # Nested Utils
 
+![License](https://img.shields.io/badge/license-MIT-blue.svg)
+![Python](https://img.shields.io/badge/python-3.7%2B-blue.svg)
+[![PyPI](https://img.shields.io/pypi/v/nestedutils)](https://pypi.org/project/nestedutils/)
+
 A utility library for accessing, setting, and deleting nested paths in Python data structures (dicts, lists, tuples).
 
 ## Features
