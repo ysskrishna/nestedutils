@@ -74,6 +74,11 @@ def set_path(
         raise PathError(f"Invalid fill_strategy: {fill_strategy}. Must be one of {valid_strategies}")
 
     keys = _normalize(path)
+    
+    # Validate path is not empty
+    if not keys or (len(keys) == 1 and keys[0] == ""):
+        raise PathError("Path cannot be empty")
+    
     current = data
 
     for i, key in enumerate(keys[:-1]):
@@ -87,6 +92,14 @@ def set_path(
                 elif fill_strategy == "list":
                     current[key] = []
                 else:  # auto or none - both intelligently create containers
+                    current[key] = [] if _is_int_key(next_key) else {}
+            elif current[key] is None:
+                # Replace None with appropriate container when navigating deeper
+                if fill_strategy == "dict":
+                    current[key] = {}
+                elif fill_strategy == "list":
+                    current[key] = []
+                else:  # auto or none
                     current[key] = [] if _is_int_key(next_key) else {}
             current = current[key]
             continue
@@ -116,6 +129,14 @@ def set_path(
                 else:
                     # auto or none - create container based on next key
                     current.append([] if _is_int_key(next_key) else {})
+            elif current[idx] is None:
+                # Replace None with appropriate container when navigating deeper
+                if fill_strategy == "dict":
+                    current[idx] = {}
+                elif fill_strategy == "list":
+                    current[idx] = []
+                else:  # auto or none
+                    current[idx] = [] if _is_int_key(next_key) else {}
 
             current = current[idx]
             continue

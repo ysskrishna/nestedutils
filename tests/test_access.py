@@ -79,6 +79,13 @@ def test_set_negative_index_write():
     assert d["a"] == [1, 2, 999]
 
 
+def test_set_negative_index_extends_list():
+    """Negative index on short list should still work"""
+    d = {"a": [1]}
+    set_path(d, "a.-1", 99)
+    assert d == {"a": [99]}
+
+
 def test_set_inside_list_of_dicts():
     d = {"a": [{}]}
     set_path(d, "a.0.x.y", 5)
@@ -111,6 +118,69 @@ def test_set_invalid_fill_strategy():
     d = {}
     with pytest.raises(PathError):
         set_path(d, "a.b", 1, fill_strategy="unknown")
+
+
+def test_all_numeric_path_with_dict_strategy():
+    """Numeric strings should be dict keys with dict strategy"""
+    d = {}
+    set_path(d, "0.1.2", 5, fill_strategy="dict")
+    assert d == {"0": {"1": {"2": 5}}}
+
+
+def test_all_numeric_path_with_auto_strategy():
+    """All numeric path with auto should create nested lists"""
+    d = {}
+    set_path(d, "0.1", 5, fill_strategy="auto")
+    # Creates nested lists when all keys are numeric
+
+
+def test_multiple_operations_different_strategies():
+    """Multiple sets with different strategies on same structure"""
+    d = {}
+    set_path(d, "a.0", 1, fill_strategy="auto")
+    set_path(d, "a.5", 2, fill_strategy="dict")  # Should still be list
+    assert isinstance(d["a"], list)
+    assert len(d["a"]) == 6
+
+
+# --------------------------------------------------------------
+# SET WITH NONE VALUES
+# --------------------------------------------------------------
+
+def test_set_through_existing_none_in_list():
+    """Should replace None with a container when navigating deeper"""
+    d = {"a": [None, None, None]}
+    set_path(d, "a.1.x", 5)
+    assert d == {"a": [None, {"x": 5}, None]}
+
+
+def test_set_through_none_created_by_sparse_fill():
+    """Auto-filled None should be replaceable"""
+    d = {}
+    set_path(d, "a.5", 1)  # Creates [None, None, None, None, None, 1]
+    set_path(d, "a.2.b", 99)  # Should replace None at index 2
+    assert d["a"][2] == {"b": 99}
+
+
+def test_set_through_none_in_dict():
+    """Should replace None value in dict when navigating deeper"""
+    d = {"a": None}
+    set_path(d, "a.b.c", 10)
+    assert d == {"a": {"b": {"c": 10}}}
+
+
+def test_set_none_value_explicitly():
+    """Setting None as a value should work"""
+    d = {"a": 1}
+    set_path(d, "a", None)
+    assert d == {"a": None}
+
+
+def test_set_none_in_nested_path():
+    """Setting None deep in path"""
+    d = {}
+    set_path(d, "a.b.c", None)
+    assert d == {"a": {"b": {"c": None}}}
 
 
 # --------------------------------------------------------------
@@ -183,6 +253,14 @@ def test_set_list_index_non_integer():
         set_path(d, "a.x", 1)
 
 
+def test_replace_list_with_dict_key():
+    """Setting dict key where list exists"""
+    d = {"a": [1, 2, 3]}
+    # This should fail - can't navigate dict key into a list
+    with pytest.raises(PathError):
+        set_path(d, "a.notanumber", 5)
+
+
 def test_get_list_index_non_integer():
     d = {"a": [1]}
     assert get_path(d, "a.x") is None  # default
@@ -206,6 +284,57 @@ def test_delete_path_invalid_type():
         del_path(d, "a.b")
 
 
+def test_empty_string_path():
+    """Empty path should be handled gracefully"""
+    d = {"a": 1}
+    with pytest.raises((PathError, ValueError, TypeError)):
+        set_path(d, "", 5)
+
+
+def test_get_empty_path():
+    """Get with empty path"""
+    d = {"a": 1}
+    result = get_path(d, "")
+    # This behavior needs to be defined
+
+
+def test_set_negative_index_on_empty_dict():
+    """Can't create list with negative index as first operation"""
+    d = {}
+    # This should probably fail - can't determine list length from negative index
+    with pytest.raises((PathError, IndexError)):
+        set_path(d, "a.-1", 5)
+
+
+def test_numeric_key_on_existing_dict():
+    """Setting numeric key on existing dict creates string key"""
+    d = {"a": {"b": 1}}
+    # Numeric keys on dicts are treated as string keys - flexible behavior
+    set_path(d, "a.0", 5)
+    assert d == {"a": {"b": 1, "0": 5}}
+
+
+def test_invalid_negative_format():
+    """String starting with - but not a valid negative number"""
+    d = {}
+    set_path(d, "a.-5x", 1)
+    assert d == {"a": {"-5x": 1}}  # Should be dict key
+
+
+def test_just_minus_sign():
+    """Just a minus sign should be dict key"""
+    d = {}
+    set_path(d, "a.-", 1)
+    assert d == {"a": {"-": 1}}
+
+
+def test_multiple_minus_signs():
+    """Multiple minus signs"""
+    d = {}
+    set_path(d, "a.--5", 1)
+    assert d == {"a": {"--5": 1}}
+
+
 # --------------------------------------------------------------
 # PATH NORMALIZATION
 # --------------------------------------------------------------
@@ -218,6 +347,20 @@ def test_path_as_list_form():
 def test_path_list_mixed_int():
     d = {"a": [{"b": 3}]}
     assert get_path(d, ["a", 0, "b"]) == 3
+
+
+def test_keys_with_dots_in_list_form():
+    """Using list form allows keys with dots"""
+    d = {}
+    set_path(d, ["a.b", "c.d"], 10)
+    assert d == {"a.b": {"c.d": 10}}
+
+
+def test_unicode_keys():
+    """Unicode in keys should work"""
+    d = {}
+    set_path(d, "你好.world.🌍", 42)
+    assert get_path(d, "你好.world.🌍") == 42
 
 
 # --------------------------------------------------------------
@@ -262,3 +405,29 @@ def test_set_path_creates_correct_types_auto():
     d = {}
     set_path(d, "root.0.child.0", 10)
     assert d == {"root": [{"child": [10]}]}
+
+
+def test_overwrite_value_with_container():
+    """Overwrite a value then navigate into it"""
+    d = {"a": 5}
+    # First this should work
+    set_path(d, "a", {"b": 1})
+    assert d == {"a": {"b": 1}}
+    # Then this should work
+    set_path(d, "a.c", 2)
+    assert d == {"a": {"b": 1, "c": 2}}
+
+
+def test_final_key_extends_list():
+    """Final key extending list should always fill with None"""
+    d = {"a": []}
+    set_path(d, "a.5", 99)
+    assert d == {"a": [None, None, None, None, None, 99]}
+
+
+def test_very_large_sparse_list():
+    """Creating very large sparse list should work but might be slow"""
+    d = {}
+    set_path(d, "a.1000", 1)
+    assert len(d["a"]) == 1001
+    assert d["a"][1000] == 1
