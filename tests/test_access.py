@@ -1,6 +1,6 @@
 import pytest
 from nestedutils import get_path, set_path, del_path
-from nestedutils.exceptions import PathError
+from nestedutils.exceptions import PathError, PathErrorCode
 
 
 # --------------------------------------------------------------
@@ -287,7 +287,7 @@ def test_delete_path_invalid_type():
 def test_empty_string_path():
     """Empty path should be handled gracefully"""
     d = {"a": 1}
-    with pytest.raises((PathError, ValueError, TypeError)):
+    with pytest.raises(PathError):
         set_path(d, "", 5)
 
 
@@ -296,6 +296,112 @@ def test_get_empty_path():
     d = {"a": 1}
     result = get_path(d, "")
     # This behavior needs to be defined
+
+
+# --------------------------------------------------------------
+# INVALID PATH TYPE TESTS
+# --------------------------------------------------------------
+
+def test_get_path_invalid_type_int():
+    """get_path should raise PathError with INVALID_PATH code for invalid path types"""
+    d = {"a": 1}
+    with pytest.raises(PathError) as exc_info:
+        get_path(d, 123)
+    assert exc_info.value.code == PathErrorCode.INVALID_PATH
+
+
+def test_get_path_invalid_type_none():
+    """get_path should raise PathError for None path"""
+    d = {"a": 1}
+    with pytest.raises(PathError) as exc_info:
+        get_path(d, None)
+    assert exc_info.value.code == PathErrorCode.INVALID_PATH
+
+
+def test_get_path_invalid_type_dict():
+    """get_path should raise PathError for dict path"""
+    d = {"a": 1}
+    with pytest.raises(PathError) as exc_info:
+        get_path(d, {"key": "value"})
+    assert exc_info.value.code == PathErrorCode.INVALID_PATH
+
+
+def test_get_path_invalid_type_tuple():
+    """get_path should raise PathError for tuple path"""
+    d = {"a": 1}
+    with pytest.raises(PathError) as exc_info:
+        get_path(d, ("a", "b"))
+    assert exc_info.value.code == PathErrorCode.INVALID_PATH
+
+
+def test_set_path_invalid_type_int():
+    """set_path should raise PathError with INVALID_PATH code for invalid path types"""
+    d = {}
+    with pytest.raises(PathError) as exc_info:
+        set_path(d, 42, "value")
+    assert exc_info.value.code == PathErrorCode.INVALID_PATH
+
+
+def test_set_path_invalid_type_none():
+    """set_path should raise PathError for None path"""
+    d = {}
+    with pytest.raises(PathError) as exc_info:
+        set_path(d, None, "value")
+    assert exc_info.value.code == PathErrorCode.INVALID_PATH
+
+
+def test_set_path_invalid_type_dict():
+    """set_path should raise PathError for dict path"""
+    d = {}
+    with pytest.raises(PathError) as exc_info:
+        set_path(d, {"key": "value"}, "value")
+    assert exc_info.value.code == PathErrorCode.INVALID_PATH
+
+
+def test_del_path_invalid_type_int():
+    """del_path should raise PathError with INVALID_PATH code for invalid path types"""
+    d = {"a": 1}
+    with pytest.raises(PathError) as exc_info:
+        del_path(d, 123)
+    assert exc_info.value.code == PathErrorCode.INVALID_PATH
+
+
+def test_del_path_invalid_type_none():
+    """del_path should raise PathError for None path"""
+    d = {"a": 1}
+    with pytest.raises(PathError) as exc_info:
+        del_path(d, None)
+    assert exc_info.value.code == PathErrorCode.INVALID_PATH
+
+
+def test_del_path_invalid_type_tuple():
+    """del_path should raise PathError for tuple path"""
+    d = {"a": 1}
+    with pytest.raises(PathError) as exc_info:
+        del_path(d, ("a", "b"))
+    assert exc_info.value.code == PathErrorCode.INVALID_PATH
+
+
+def test_all_functions_raise_path_error_for_invalid_types():
+    """Verify all functions consistently raise PathError for invalid path types"""
+    d = {"a": 1}
+    invalid_paths = [123, None, {}, tuple(), set(), 3.14, True]
+    
+    for invalid_path in invalid_paths:
+        # Test get_path
+        with pytest.raises(PathError) as exc_info:
+            get_path(d, invalid_path)
+        assert exc_info.value.code == PathErrorCode.INVALID_PATH
+        
+        # Test set_path
+        with pytest.raises(PathError) as exc_info:
+            set_path(d, invalid_path, "value")
+        assert exc_info.value.code == PathErrorCode.INVALID_PATH
+        
+        # Test del_path
+        with pytest.raises(PathError) as exc_info:
+            del_path(d, invalid_path)
+        assert exc_info.value.code == PathErrorCode.INVALID_PATH
 
 
 def test_set_negative_index_on_empty_dict():
