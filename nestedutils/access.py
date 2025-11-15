@@ -63,11 +63,15 @@ def set_path(
 ):
     """
     fill_strategy:
-      - "auto": {} for dicts, [] for lists
+      - "auto": {} for dicts, [] for lists, None for sparse list items
       - "none": fill missing list items with None
       - "dict": always fill with {}
       - "list": always fill with []
     """
+    # Validate fill_strategy
+    valid_strategies = {"auto", "none", "dict", "list"}
+    if fill_strategy not in valid_strategies:
+        raise PathError(f"Invalid fill_strategy: {fill_strategy}. Must be one of {valid_strategies}")
 
     keys = _normalize(path)
     current = data
@@ -82,9 +86,7 @@ def set_path(
                     current[key] = {}
                 elif fill_strategy == "list":
                     current[key] = []
-                elif fill_strategy == "none":
-                    current[key] = None
-                else:  # auto
+                else:  # auto or none - both intelligently create containers
                     current[key] = [] if _is_int_key(next_key) else {}
             current = current[key]
             continue
@@ -95,16 +97,25 @@ def set_path(
                 raise PathError(f"Expected index at '{key}'")
             idx = _get_list_index(current, key)
 
-            while len(current) <= idx:
-                if fill_strategy == "none":
-                    current.append(None)
-                elif fill_strategy == "dict":
+            # Fill gaps before the target index
+            while len(current) < idx:
+                if fill_strategy == "dict":
                     current.append({})
                 elif fill_strategy == "list":
                     current.append([])
                 else:
-                    # auto mode
-                    current.append({} if not _is_int_key(next_key) else [])
+                    # auto or none - fill sparse list items with None
+                    current.append(None)
+            
+            # Now create the container at the target index if needed
+            if len(current) == idx:
+                if fill_strategy == "dict":
+                    current.append({})
+                elif fill_strategy == "list":
+                    current.append([])
+                else:
+                    # auto or none - create container based on next key
+                    current.append([] if _is_int_key(next_key) else {})
 
             current = current[idx]
             continue

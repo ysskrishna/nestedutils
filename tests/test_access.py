@@ -98,7 +98,7 @@ def test_set_fill_strategy_none():
 def test_set_fill_strategy_dict():
     d = {}
     set_path(d, "a.0.b", 1, fill_strategy="dict")
-    assert d == {"a": [{"b": 1}]}
+    assert d == {"a": {"0": {"b": 1}}}
 
 
 def test_set_fill_strategy_list():
@@ -170,7 +170,7 @@ def test_delete_from_nested_list_dict():
     d = {"a": [{"b": 1}, {"b": 2}]}
     val = del_path(d, "a.0.b")
     assert val == 1
-    assert d == {"a": [{"}, {"b": 2}]} or d == {"a": [{"}, {"b": 2}]}  # acceptable depending on dict emptiness
+    assert d == {"a": [{}, {"b": 2}]} or d == {"a": [{}, {"b": 2}]}  # acceptable depending on dict emptiness
 
 
 # --------------------------------------------------------------
