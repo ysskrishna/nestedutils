@@ -40,6 +40,9 @@ build-backend = "hatchling.build"
 [tool.hatch.build.targets.wheel]
 packages = ["nestedutils"]
 
+[tool.pytest.ini_options]
+addopts = "--maxfail=1"
+
 [tool.internalurls]
 author_username = "ysskrishna"
 author_name = "Y. Siva Sai Krishna"
