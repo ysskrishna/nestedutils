@@ -7,6 +7,8 @@
 
 A lightweight Python library for safely navigating and manipulating nested data structures (dicts, lists) using simple dot-notation paths. Ideal for JSON APIs, configs, and complex dict/list objects.
 
+![OG Image](media/og.png)
+
 ## Why nestedutils?
 
 Working with deeply nested data (like JSON API responses) often leads to verbose, error-prone boilerplate:
