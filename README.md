@@ -5,7 +5,7 @@
 ![Python](https://img.shields.io/badge/python-3.8%2B-blue.svg)
 [![PyPI](https://img.shields.io/pypi/v/nestedutils)](https://pypi.org/project/nestedutils/)
 
-A utility library for accessing, setting, and deleting nested paths in Python data structures (dicts, lists).
+A lightweight Python library for safely navigating and manipulating nested data structures (dicts, lists) using simple dot-notation paths. Ideal for JSON APIs, configs, and complex dict/list objects.
 
 ## Why nestedutils?
 
