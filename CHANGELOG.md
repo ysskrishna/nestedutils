@@ -28,7 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Features
 
 - Zero external dependencies
-- Python 3.7+ compatibility
+- Python 3.8+ compatibility
 - Immutable container protection (tuples cannot be modified)
 - Safe list deletion (requires explicit `allow_list_mutation=True` flag)
 

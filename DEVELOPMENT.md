@@ -4,7 +4,7 @@ This guide covers how to set up and work on the `nestedutils` project locally.
 
 ## Prerequisites
 
-- Python 3.7 or higher
+- Python 3.8 or higher
 - [uv](https://github.com/astral-sh/uv) - A fast Python package installer and resolver
 
 ## Installation

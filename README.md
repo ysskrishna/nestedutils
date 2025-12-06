@@ -2,7 +2,7 @@
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![Tests](https://github.com/ysskrishna/nestedutils/actions/workflows/test.yml/badge.svg)
-![Python](https://img.shields.io/badge/python-3.7%2B-blue.svg)
+![Python](https://img.shields.io/badge/python-3.8%2B-blue.svg)
 [![PyPI](https://img.shields.io/pypi/v/nestedutils)](https://pypi.org/project/nestedutils/)
 
 A utility library for accessing, setting, and deleting nested paths in Python data structures (dicts, lists).
@@ -220,7 +220,7 @@ set_path(data, "a.b.c", 10)
 
 ## Requirements
 
-- Python 3.7+
+- Python 3.8+
 
 ## Development
 
