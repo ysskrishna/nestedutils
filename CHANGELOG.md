@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Initial release of nestedutils
-- `get_path()` function for accessing nested values in dictionaries, lists, and tuples
+- `get_path()` function for accessing nested values in dictionaries, lists
 - `set_path()` function for setting nested values with automatic container creation
 - `del_path()` function for deleting nested values
 - Support for dot-notation string paths (`"a.b.c"`) and list paths (`["a", "b", "c"]`)

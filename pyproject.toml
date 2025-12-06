@@ -1,7 +1,7 @@
 [project]
 name = "nestedutils"
 version = "1.0.0"
-description = "A utility library for accessing, setting, and deleting nested paths in Python data structures (dicts, lists, tuples)."
+description = "A utility library for accessing, setting, and deleting nested paths in Python data structures (dicts, lists)."
 readme = "README.md"
 requires-python = ">=3.7"
 authors = [

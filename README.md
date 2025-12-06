@@ -5,7 +5,7 @@
 ![Python](https://img.shields.io/badge/python-3.7%2B-blue.svg)
 [![PyPI](https://img.shields.io/pypi/v/nestedutils)](https://pypi.org/project/nestedutils/)
 
-A utility library for accessing, setting, and deleting nested paths in Python data structures (dicts, lists, tuples).
+A utility library for accessing, setting, and deleting nested paths in Python data structures (dicts, lists).
 
 ## Why nestedutils?
 
@@ -28,7 +28,7 @@ user_name = get_path(data, "users.0.profile.name")
 ## Features
 
 - **Simple Path Syntax**: Use dot-notation strings (`"a.b.c"`) or lists (`["a", "b", "c"]`) to navigate nested structures
-- **Mixed Data Types**: Seamlessly work with dictionaries, lists, and tuples
+- **Mixed Data Types**: Seamlessly work with dictionaries, lists
 - **List Index Support**: Access list elements using numeric indices, including negative indices
 - **Auto-creation**: Automatically create missing intermediate containers when setting values
 - **Flexible Fill Strategies**: Control how missing containers are created with different fill strategies
