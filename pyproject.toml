@@ -22,7 +22,34 @@ classifiers = [
   "Topic :: Software Development :: Libraries :: Python Modules",
   "Topic :: Utilities"
 ]
-keywords = ["nested", "path", "access", "dictionary", "dict", "list", "utils", "utilities", "json", "dot-notation", "deep-get", "deep-set", "safe-access", "data-traversal"]
+keywords = [
+    "nested",
+    "nested-data",
+    "dot-notation",
+    "dot-access",
+    "path-access",
+    "keypath",
+    "deep-get",
+    "deep-set",
+    "deep-access",
+    "deep-delete",
+    "safe-access",
+    "KeyError",
+    "no-keyerror",
+    "key-error-handling",
+    "dictionary", 
+    "dict",       
+    "list",       
+    "json",       
+    "config",     
+    "json-access",
+    "json-utils",
+    "dict-utils",
+    "data-utils",
+    "config-utils",
+    "utilities", 
+    "utils"
+]
 dependencies = []
 
 [project.urls]
