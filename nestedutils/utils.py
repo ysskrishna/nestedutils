@@ -1,9 +1,9 @@
-def escape_key(key: str, escape="\\", sep="."):
+def escape_key(key: str, escape: str = "\\", sep: str = ".") -> str:
     """Escape separators inside keys."""
     return key.replace(escape, escape + escape).replace(sep, escape + sep)
 
 
-def unescape_key(key: str, escape="\\", sep="."):
+def unescape_key(key: str, escape: str = "\\", sep: str = ".") -> str:
     """Unescape separators."""
     i = 0
     out = []

@@ -1,7 +1,7 @@
 from typing import Any, Union, List
 from .exceptions import PathError, PathErrorCode
 
-def _normalize(path):
+def _normalize(path: Union[str, List[Any]]) -> List[str]:
     if isinstance(path, list):
         return [str(x) for x in path]
     if isinstance(path, str):
@@ -9,13 +9,13 @@ def _normalize(path):
     raise PathError(f"path must be string or list, got {type(path).__name__}", PathErrorCode.INVALID_PATH)
 
 
-def _is_int_key(key):
+def _is_int_key(key: str) -> bool:
     if key.startswith("-") and key[1:].isdigit():
         return True
     return key.isdigit()
 
 
-def _get_list_index(container, key: str):
+def _get_list_index(container: Union[List[Any], tuple], key: str) -> int:
     """Convert key to index (supports negative indices)."""
     try:
         index = int(key)
@@ -27,7 +27,7 @@ def _get_list_index(container, key: str):
     return index
 
 
-def _navigate(container, key, default_marker):
+def _navigate(container: Any, key: str, default_marker: Any) -> Any:
     """Unified navigation for dict/list/tuple."""
     if isinstance(container, dict):
         return container.get(key, default_marker)
@@ -43,7 +43,7 @@ def _navigate(container, key, default_marker):
     return default_marker
 
 
-def get_path(data: Any, path: Union[str, list], default=None) -> Any:
+def get_path(data: Any, path: Union[str, List[Any]], default: Any = None) -> Any:
     keys = _normalize(path)
     current = data
     MISSING = object()
@@ -57,10 +57,10 @@ def get_path(data: Any, path: Union[str, list], default=None) -> Any:
 
 def set_path(
     data: Any,
-    path: Union[str, list],
+    path: Union[str, List[Any]],
     value: Any,
-    fill_strategy="auto"
-):
+    fill_strategy: str = "auto"
+) -> None:
     """
     fill_strategy:
       - "auto": {} for dicts, [] for lists, None for sparse list items
@@ -169,7 +169,7 @@ def set_path(
     raise PathError("Cannot set value in non-container type", PathErrorCode.INVALID_PATH)
 
 
-def del_path(data: Any, path: Union[str, list], allow_list_mutation=False):
+def del_path(data: Any, path: Union[str, List[Any]], allow_list_mutation: bool = False) -> Any:
     keys = _normalize(path)
     current = data
 
