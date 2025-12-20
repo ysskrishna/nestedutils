@@ -1,0 +1,14 @@
+# mkdocs.yml
+site_name: nestedutils
+plugins:
+  - mkdocstrings:
+      handlers:
+        python:
+          options:
+            show_source: false
+            show_signature_annotations: true
+            separate_signature: true
+            docstring_style: google
+            merge_init_into_class: true
+theme:
+  name: readthedocs
