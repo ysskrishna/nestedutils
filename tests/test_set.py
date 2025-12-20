@@ -213,6 +213,17 @@ class TestSetErrorCases:
             set_at(d, "", 5)
         assert exc_info.value.code == PathErrorCode.EMPTY_PATH
     
+    def test_empty_key_in_middle(self):
+        """Set with empty key in middle of path should raise PathError."""
+        d = {}
+        with pytest.raises(PathError) as exc_info:
+            set_at(d, "a..b", 1)
+        assert exc_info.value.code == PathErrorCode.EMPTY_PATH
+        
+        with pytest.raises(PathError) as exc_info:
+            set_at(d, ["a", "", "b"], 1)
+        assert exc_info.value.code == PathErrorCode.EMPTY_PATH
+    
     def test_set_negative_index_on_empty_dict(self):
         """Can't create list with negative index as first operation."""
         d = {}

@@ -1,3 +1,4 @@
+import pytest
 from nestedutils import get_at, set_at, delete_at
 from nestedutils.exceptions import PathError, PathErrorCode
 
@@ -62,11 +63,16 @@ class TestPathNormalizationEdgeCases:
         assert d["a"][2] == 999
     
     def test_path_list_empty_strings(self):
-        """List form with empty strings."""
+        """List form with empty strings should raise PathError."""
         d = {}
-        set_at(d, ["a", "", "b"], 1)
-        assert d == {"a": {"": {"b": 1}}}
-        assert get_at(d, ["a", "", "b"]) == 1
+        with pytest.raises(PathError) as exc_info:
+            set_at(d, ["a", "", "b"], 1)
+        assert exc_info.value.code == PathErrorCode.EMPTY_PATH
+        
+        # Also test with get_at
+        with pytest.raises(PathError) as exc_info:
+            get_at(d, ["a", "", "b"])
+        assert exc_info.value.code == PathErrorCode.EMPTY_PATH
 
 
 class TestComplexIntegrationScenarios:

@@ -3,11 +3,31 @@ from .exceptions import PathError
 from .enums import PathErrorCode, FillStrategy, FillStrategyType
 
 def _normalize(path: Union[str, List[Any]]) -> List[str]:
+    """Normalize path to list of strings and validate.
+    
+    Converts path to a list of string keys, validating that:
+    - Path is not empty
+    - No keys in the path are empty strings
+    
+    Raises:
+        PathError: If path format is invalid, path is empty, or contains empty keys.
+    """
     if isinstance(path, list):
-        return [str(x) for x in path]
-    if isinstance(path, str):
-        return path.split(".")
-    raise PathError(f"path must be string or list, got {type(path).__name__}", PathErrorCode.INVALID_PATH)
+        keys = [str(x) for x in path]
+    elif isinstance(path, str):
+        keys = path.split(".")
+    else:
+        raise PathError(f"path must be string or list, got {type(path).__name__}", PathErrorCode.INVALID_PATH)
+    
+    # Validate path is not empty
+    if not keys:
+        raise PathError("Path cannot be empty", PathErrorCode.EMPTY_PATH)
+    
+    # Validate no empty keys in the path
+    if any(key == "" for key in keys):
+        raise PathError("Path cannot contain empty keys", PathErrorCode.EMPTY_PATH)
+    
+    return keys
 
 
 def _is_int_key(key: str) -> bool:
@@ -159,11 +179,6 @@ def set_at(
         )
 
     keys = _normalize(path)
-    
-    # Validate path is not empty
-    if not keys or (len(keys) == 1 and keys[0] == ""):
-        raise PathError("Path cannot be empty", PathErrorCode.EMPTY_PATH)
-    
     current = data
 
     for i, key in enumerate(keys[:-1]):
@@ -362,6 +377,15 @@ def delete_at(data: Any, path: Union[str, List[Any]], allow_list_mutation: bool 
                 current = current[idx]
             except IndexError:
                 raise PathError(f"Missing index {key}", PathErrorCode.INVALID_INDEX)
+        elif isinstance(current, tuple):
+            # Can navigate through tuples, but will fail at deletion step
+            if not _is_int_key(key):
+                raise PathError(f"Invalid index {key}", PathErrorCode.INVALID_INDEX)
+            idx = _get_list_index(current, key)
+            try:
+                current = current[idx]
+            except IndexError:
+                raise PathError(f"Missing index {key}", PathErrorCode.INVALID_INDEX)
         else:
             raise PathError(f"Invalid type in path", PathErrorCode.INVALID_PATH)
 
@@ -380,5 +404,8 @@ def delete_at(data: Any, path: Union[str, List[Any]], allow_list_mutation: bool 
             return current.pop(idx)
         except IndexError:
             raise PathError(f"Missing index {last}", PathErrorCode.INVALID_INDEX)
+
+    if isinstance(current, tuple):
+        raise PathError("Cannot delete from tuple (immutable container)", PathErrorCode.IMMUTABLE_CONTAINER)
 
     raise PathError("Cannot delete from non-container type", PathErrorCode.INVALID_PATH)

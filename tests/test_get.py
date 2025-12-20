@@ -166,11 +166,21 @@ class TestGetInvalidPaths:
             get_at(d, invalid_path)
         assert exc_info.value.code == PathErrorCode.INVALID_PATH
     
-    # def test_get_empty_path(self):
-    #     """Get with empty path returns the root data."""
-    #     d = {"a": 1}
-    #     # Empty path should return the root data structure
-    #     result = get_at(d, "")
-    #     assert result == d
-    #     assert result is d  # Should return the same object
+    def test_get_empty_path(self):
+        """Get with empty path should raise PathError."""
+        d = {"a": 1}
+        with pytest.raises(PathError) as exc_info:
+            get_at(d, "")
+        assert exc_info.value.code == PathErrorCode.EMPTY_PATH
+    
+    def test_get_empty_key_in_middle(self):
+        """Get with empty key in middle of path should raise PathError."""
+        d = {"a": {"": {"b": 1}}}
+        with pytest.raises(PathError) as exc_info:
+            get_at(d, "a..b")
+        assert exc_info.value.code == PathErrorCode.EMPTY_PATH
+        
+        with pytest.raises(PathError) as exc_info:
+            get_at(d, ["a", "", "b"])
+        assert exc_info.value.code == PathErrorCode.EMPTY_PATH
 

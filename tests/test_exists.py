@@ -176,6 +176,24 @@ class TestExistsInvalidPaths:
         with pytest.raises(PathError) as exc_info:
             exists_at(d, invalid_path)
         assert exc_info.value.code == PathErrorCode.INVALID_PATH
+    
+    def test_exists_empty_path(self):
+        """Exists with empty path should raise PathError."""
+        d = {"a": 1}
+        with pytest.raises(PathError) as exc_info:
+            exists_at(d, "")
+        assert exc_info.value.code == PathErrorCode.EMPTY_PATH
+    
+    def test_exists_empty_key_in_middle(self):
+        """Exists with empty key in middle of path should raise PathError."""
+        d = {"a": {"": {"b": 1}}}
+        with pytest.raises(PathError) as exc_info:
+            exists_at(d, "a..b")
+        assert exc_info.value.code == PathErrorCode.EMPTY_PATH
+        
+        with pytest.raises(PathError) as exc_info:
+            exists_at(d, ["a", "", "b"])
+        assert exc_info.value.code == PathErrorCode.EMPTY_PATH
 
 
 class TestExistsWithTuples:

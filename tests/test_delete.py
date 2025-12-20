@@ -113,12 +113,12 @@ class TestDeleteErrorCases:
             delete_at(d, "a.b")
         assert exc_info.value.code == PathErrorCode.INVALID_PATH
     
-    # def test_delete_from_tuple(self):
-    #     """Delete from tuple should fail (immutable)."""
-    #     d = {"a": (1, 2, 3)}
-    #     with pytest.raises(PathError) as exc_info:
-    #         delete_at(d, "a.0")
-    #     assert exc_info.value.code == PathErrorCode.IMMUTABLE_CONTAINER
+    def test_delete_from_tuple(self):
+        """Delete from tuple should fail (immutable)."""
+        d = {"a": (1, 2, 3)}
+        with pytest.raises(PathError) as exc_info:
+            delete_at(d, "a.0")
+        assert exc_info.value.code == PathErrorCode.IMMUTABLE_CONTAINER
     
     def test_delete_missing_intermediate_key(self):
         """Delete with missing intermediate key should fail."""
@@ -127,12 +127,23 @@ class TestDeleteErrorCases:
             delete_at(d, "a.b.c")
         assert exc_info.value.code == PathErrorCode.MISSING_KEY
     
-    # def test_delete_empty_path(self):
-    #     """Delete with empty path should fail."""
-    #     d = {"a": 1}
-    #     with pytest.raises(PathError) as exc_info:
-    #         delete_at(d, "")
-    #     assert exc_info.value.code == PathErrorCode.EMPTY_PATH
+    def test_delete_empty_path(self):
+        """Delete with empty path should fail."""
+        d = {"a": 1}
+        with pytest.raises(PathError) as exc_info:
+            delete_at(d, "")
+        assert exc_info.value.code == PathErrorCode.EMPTY_PATH
+    
+    def test_delete_empty_key_in_middle(self):
+        """Delete with empty key in middle of path should fail."""
+        d = {"a": {"": {"b": 1}}}
+        with pytest.raises(PathError) as exc_info:
+            delete_at(d, "a..b")
+        assert exc_info.value.code == PathErrorCode.EMPTY_PATH
+        
+        with pytest.raises(PathError) as exc_info:
+            delete_at(d, ["a", "", "b"])
+        assert exc_info.value.code == PathErrorCode.EMPTY_PATH
 
 
 class TestDeleteComplex:
