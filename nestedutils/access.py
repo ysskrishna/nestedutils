@@ -44,6 +44,42 @@ def _navigate(container: Any, key: str, default_marker: Any) -> Any:
 
 
 def get_at(data: Any, path: Union[str, List[Any]], default: Any = None) -> Any:
+    """Retrieve a value from a nested data structure.
+    
+    Navigates through nested dictionaries, lists, and tuples using a path
+    specified as either a dot-notation string or a list of keys/indices.
+    Returns a default value if the path doesn't exist, avoiding KeyError
+    or IndexError exceptions.
+    
+    Args:
+        data: The data structure to navigate (dict, list, tuple, or nested
+            combinations of these types).
+        path: Path to the value. Can be a dot-notation string (e.g., "a.b.c")
+            or a list of keys/indices (e.g., ["a", "b", "c"]). For lists,
+            use numeric indices (e.g., "items.0.name" or "items.-1" for
+            negative indexing).
+        default: Value to return if path doesn't exist. Defaults to None.
+    
+    Returns:
+        The value at the specified path, or `default` if the path doesn't exist.
+    
+    Raises:
+        PathError: If the path format is invalid (e.g., non-string/list path).
+    
+    Examples:
+        >>> data = {"a": {"b": {"c": 5}}}
+        >>> get_at(data, "a.b.c")
+        5
+        >>> get_at(data, "a.b.d", default=99)
+        99
+        >>> data = {"items": [{"name": "apple"}, {"name": "banana"}]}
+        >>> get_at(data, "items.1.name")
+        'banana'
+        >>> get_at(data, "items.-1.name")
+        'banana'
+        >>> get_at(data, ["items", "0", "name"])
+        'apple'
+    """
     keys = _normalize(path)
     current = data
     MISSING = object()
@@ -61,12 +97,56 @@ def set_at(
     value: Any,
     fill_strategy: str = "auto"
 ) -> None:
-    """
-    fill_strategy:
-      - "auto": {} for dicts, [] for lists, None for sparse list items
-      - "none": fill missing list items with None
-      - "dict": always fill with {}
-      - "list": always fill with []
+    """Set a value in a nested data structure, creating intermediate containers as needed.
+    
+    Navigates to the specified path and sets the value, automatically creating
+    any missing intermediate dictionaries or lists. Supports flexible fill
+    strategies to control how missing containers are created.
+    
+    Args:
+        data: The data structure to modify (must be mutable: dict or list).
+            The root container must be mutable, but intermediate containers
+            will be created as needed.
+        path: Path where to set the value. Can be a dot-notation string
+            (e.g., "a.b.c") or a list of keys/indices (e.g., ["a", "b", "c"]).
+            For lists, use numeric indices (e.g., "items.0.name").
+        value: The value to set at the specified path.
+        fill_strategy: How to fill missing containers. Must be one of:
+            - "auto": Intelligently creates `{}` for dict keys, `[]` for list
+              indices, and `None` for sparse list items.
+            - "none": Fills missing list items with `None` when creating
+              sparse lists.
+            - "dict": Always creates dictionaries for missing containers.
+            - "list": Always creates lists for missing containers.
+            Defaults to "auto".
+    
+    Returns:
+        None. The function modifies `data` in place.
+    
+    Raises:
+        PathError: If the path format is invalid, path is empty, attempting
+            to modify a tuple, or fill_strategy is invalid.
+    
+    Examples:
+        >>> data = {}
+        >>> set_at(data, "user.profile.name", "Alice")
+        >>> data
+        {'user': {'profile': {'name': 'Alice'}}}
+        
+        >>> data = {}
+        >>> set_at(data, "items.0.name", "Item 1")
+        >>> data
+        {'items': [{'name': 'Item 1'}]}
+        
+        >>> data = {}
+        >>> set_at(data, "items.5", "Item 6", fill_strategy="none")
+        >>> data
+        {'items': [None, None, None, None, None, 'Item 6']}
+        
+        >>> data = {"a": None}
+        >>> set_at(data, "a.b.c", 10)
+        >>> data
+        {'a': {'b': {'c': 10}}}
     """
     # Validate fill_strategy
     valid_strategies = {"auto", "none", "dict", "list"}
@@ -170,6 +250,48 @@ def set_at(
 
 
 def delete_at(data: Any, path: Union[str, List[Any]], allow_list_mutation: bool = False) -> Any:
+    """Delete a value from a nested data structure.
+    
+    Removes the value at the specified path from the data structure and returns
+    the deleted value. For dictionaries, the key-value pair is removed. For
+    lists, deletion is disabled by default to prevent accidental mutations.
+    
+    Args:
+        data: The data structure to modify (must be mutable: dict or list).
+        path: Path to the value to delete. Can be a dot-notation string
+            (e.g., "a.b.c") or a list of keys/indices (e.g., ["a", "b", "c"]).
+            For lists, use numeric indices (e.g., "items.0").
+        allow_list_mutation: If True, allows deletion from lists using `pop()`.
+            If False (default), raises PathError when attempting to delete
+            from a list. This prevents accidental list mutations.
+    
+    Returns:
+        The deleted value that was removed from the data structure.
+    
+    Raises:
+        PathError: If the path doesn't exist, path format is invalid, attempting
+            to delete from a list without `allow_list_mutation=True`, or
+            attempting to delete from a non-container type.
+    
+    Examples:
+        >>> data = {"a": {"b": 1, "c": 2}}
+        >>> delete_at(data, "a.b")
+        1
+        >>> data
+        {'a': {'c': 2}}
+        
+        >>> data = {"items": [1, 2, 3]}
+        >>> delete_at(data, "items.1", allow_list_mutation=True)
+        2
+        >>> data
+        {'items': [1, 3]}
+        
+        >>> data = {"items": [1, 2, 3]}
+        >>> delete_at(data, "items.1")
+        Traceback (most recent call last):
+        ...
+        PathError: List deletion is disabled. Pass allow_list_mutation=True.
+    """
     keys = _normalize(path)
     current = data
 
