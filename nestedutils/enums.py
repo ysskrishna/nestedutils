@@ -1,5 +1,4 @@
 from enum import Enum
-from typing import Literal, Union, List, Any
 
 class PathErrorCode(Enum):
     """Error codes for path-related exceptions."""
@@ -17,6 +16,3 @@ class FillStrategy(Enum):
     NONE = "none"
     DICT = "dict"
     LIST = "list"
-
-FillStrategyType = Literal["auto", "none", "dict", "list"]
-PathLike = Union[str, List[Any]]

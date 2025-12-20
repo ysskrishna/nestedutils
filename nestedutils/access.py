@@ -1,12 +1,11 @@
-from typing import Any
-from .enums import PathLike
+from typing import Any, List, Literal, Union
 from .exceptions import PathError
-from .enums import PathErrorCode, FillStrategy, FillStrategyType
+from .enums import PathErrorCode, FillStrategy
 from .helpers import normalize_path, navigate, create_container, fill_list_gaps, ensure_container_at_index
 from .helpers import is_int_key, resolve_write_index
 
 
-def get_at(data: Any, path: PathLike, default: Any = None) -> Any:
+def get_at(data: Any, path: Union[str, List[Any]], default: Any = None) -> Any:
     """Retrieve a value from a nested data structure.
     
     Navigates through nested dictionaries, lists, and tuples using a path
@@ -58,7 +57,7 @@ def get_at(data: Any, path: PathLike, default: Any = None) -> Any:
     return current
 
 
-def exists_at(data: Any, path: PathLike) -> bool:
+def exists_at(data: Any, path: Union[str, List[Any]]) -> bool:
     """Check if a path exists in a nested data structure.
     
     Navigates through nested dictionaries, lists, and tuples using a path
@@ -117,9 +116,9 @@ def exists_at(data: Any, path: PathLike) -> bool:
 
 def set_at(
     data: Any,
-    path: PathLike,
+    path: Union[str, List[Any]],
     value: Any,
-    fill_strategy: FillStrategyType = "auto"
+    fill_strategy: Literal["auto", "none", "dict", "list"] = "auto"
 ) -> None:
     """Set a value in a nested data structure, creating intermediate containers as needed.
     
@@ -268,7 +267,7 @@ def set_at(
 
 def delete_at(
     data: Any,
-    path: PathLike,
+    path: Union[str, List[Any]],
     *,
     allow_list_mutation: bool = False
 ) -> Any:

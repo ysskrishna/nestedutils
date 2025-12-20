@@ -1,10 +1,10 @@
 from typing import Any, List, Union, Optional
 from .exceptions import PathError
-from .enums import PathErrorCode, FillStrategy, PathLike
+from .enums import PathErrorCode, FillStrategy
 from .constants import MAX_DEPTH, MAX_LIST_SIZE
 
 
-def normalize_path(path: PathLike) -> List[str]:
+def normalize_path(path: Union[str, List[Any]]) -> List[str]:
     """Normalize path to list of strings and validate.
     
     Converts path to a list of string keys, validating that:
