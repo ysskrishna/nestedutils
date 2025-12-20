@@ -22,9 +22,9 @@ if data and "users" in data and len(data["users"]) > 0:
         user_name = user["profile"].get("name")
 
 # With nestedutils: Clean, safe, and readable
-from nestedutils import get_path
+from nestedutils import get_at
 
-user_name = get_path(data, "users.0.profile.name")
+user_name = get_at(data, "users.0.profile.name")
 ```
 
 ## Features
@@ -41,7 +41,7 @@ user_name = get_path(data, "users.0.profile.name")
 
 - **JSON API Responses**: Safely extract values from complex, unpredictable JSON responses without dozens of checks.
 - **Configuration Management**: easily read and modify deeply nested settings in configuration dictionaries.
-- **Data Transformation**: Rapidly remap data from one complex structure to another using `get_path` and `set_path`.
+- **Data Transformation**: Rapidly remap data from one complex structure to another using `get_at` and `set_at`.
 
 ## Installation
 
@@ -52,29 +52,29 @@ pip install nestedutils
 ## Quick Start
 
 ```python
-from nestedutils import get_path, set_path, del_path
+from nestedutils import get_at, set_at, delete_at
 
 # Create a nested structure
 data = {}
 
 # Set values using dot-notation
-set_path(data, "user.name", "John")
-set_path(data, "user.age", 30)
-set_path(data, "user.hobbies.0", "reading")
-set_path(data, "user.hobbies.1", "coding")
+set_at(data, "user.name", "John")
+set_at(data, "user.age", 30)
+set_at(data, "user.hobbies.0", "reading")
+set_at(data, "user.hobbies.1", "coding")
 
 # Access values
-name = get_path(data, "user.name")  # "John"
-age = get_path(data, "user.age")    # 30
-first_hobby = get_path(data, "user.hobbies.0")  # "reading"
+name = get_at(data, "user.name")  # "John"
+age = get_at(data, "user.age")    # 30
+first_hobby = get_at(data, "user.hobbies.0")  # "reading"
 
 # Delete values
-del_path(data, "user.age")
+delete_at(data, "user.age")
 ```
 
 ## API Reference
 
-### `get_path(data, path, default=None)`
+### `get_at(data, path, default=None)`
 
 Retrieve a value from a nested data structure.
 
@@ -90,15 +90,15 @@ Retrieve a value from a nested data structure.
 
 ```python
 data = {"a": {"b": {"c": 5}}}
-get_path(data, "a.b.c")  # 5
-get_path(data, "a.b.d", default=99)  # 99
+get_at(data, "a.b.c")  # 5
+get_at(data, "a.b.d", default=99)  # 99
 
 data = {"items": [{"name": "apple"}, {"name": "banana"}]}
-get_path(data, "items.1.name")  # "banana"
-get_path(data, "items.-1.name")  # "banana" (negative index)
+get_at(data, "items.1.name")  # "banana"
+get_at(data, "items.-1.name")  # "banana" (negative index)
 ```
 
-### `set_path(data, path, value, fill_strategy="auto")`
+### `set_at(data, path, value, fill_strategy="auto")`
 
 Set a value in a nested data structure, creating intermediate containers as needed.
 
@@ -117,19 +117,19 @@ Set a value in a nested data structure, creating intermediate containers as need
 
 ```python
 data = {}
-set_path(data, "user.profile.name", "Alice")
+set_at(data, "user.profile.name", "Alice")
 # Creates: {"user": {"profile": {"name": "Alice"}}}
 
 data = {}
-set_path(data, "items.0.name", "Item 1")
+set_at(data, "items.0.name", "Item 1")
 # Creates: {"items": [{"name": "Item 1"}]}
 
 data = {}
-set_path(data, "items.5", "Item 6", fill_strategy="none")
+set_at(data, "items.5", "Item 6", fill_strategy="none")
 # Creates: {"items": [None, None, None, None, None, "Item 6"]}
 ```
 
-### `del_path(data, path, allow_list_mutation=False)`
+### `delete_at(data, path, allow_list_mutation=False)`
 
 Delete a value from a nested data structure.
 
@@ -147,10 +147,10 @@ Delete a value from a nested data structure.
 
 ```python
 data = {"a": {"b": 1, "c": 2}}
-del_path(data, "a.b")  # Returns 1, data becomes {"a": {"c": 2}}
+delete_at(data, "a.b")  # Returns 1, data becomes {"a": {"c": 2}}
 
 data = {"items": [1, 2, 3]}
-del_path(data, "items.1", allow_list_mutation=True)  # Returns 2
+delete_at(data, "items.1", allow_list_mutation=True)  # Returns 2
 # data becomes {"items": [1, 3]}
 ```
 
@@ -162,7 +162,7 @@ The library uses `PathError` exceptions with error codes for different failure s
 from nestedutils import PathError, PathErrorCode
 
 try:
-    set_path(data, "invalid.path", 1)
+    set_at(data, "invalid.path", 1)
 except PathError as e:
     print(e.message)  # Error message
     print(e.code)     # Error code (PathErrorCode enum)
@@ -185,8 +185,8 @@ List paths are useful when keys contain dots:
 
 ```python
 data = {}
-set_path(data, ["user.name", "first"], "John")
-set_path(data, ["user.name", "last"], "Doe")
+set_at(data, ["user.name", "first"], "John")
+set_at(data, ["user.name", "last"], "Doe")
 # Creates: {"user.name": {"first": "John", "last": "Doe"}}
 ```
 
@@ -196,8 +196,8 @@ Negative indices work like Python list indexing:
 
 ```python
 data = {"items": [10, 20, 30]}
-get_path(data, "items.-1")  # 30 (last item)
-set_path(data, "items.-1", 999)  # Updates last item
+get_at(data, "items.-1")  # 30 (last item)
+set_at(data, "items.-1", 999)  # Updates last item
 ```
 
 ### Working with Tuples
@@ -206,8 +206,8 @@ Tuples are read-only. You can read from them but cannot modify:
 
 ```python
 data = {"items": (1, 2, 3)}
-get_path(data, "items.0")  # 1 (works)
-set_path(data, "items.0", 9)  # Raises PathError (tuples are immutable)
+get_at(data, "items.0")  # 1 (works)
+set_at(data, "items.0", 9)  # Raises PathError (tuples are immutable)
 ```
 
 ### Handling None Values
@@ -216,7 +216,7 @@ The library can navigate through `None` values when setting:
 
 ```python
 data = {"a": None}
-set_path(data, "a.b.c", 10)
+set_at(data, "a.b.c", 10)
 # Replaces None with container: {"a": {"b": {"c": 10}}}
 ```
 

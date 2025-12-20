@@ -1,4 +1,4 @@
-from .access import get_path, set_path, del_path
+from .access import get_at, set_at, delete_at
 from .exceptions import PathError, PathErrorCode
 
-__all__ = ["get_path", "set_path", "del_path", "PathError", "PathErrorCode"]
+__all__ = ["get_at", "set_at", "delete_at", "PathError", "PathErrorCode"]

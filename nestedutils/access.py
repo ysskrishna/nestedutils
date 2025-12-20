@@ -43,7 +43,7 @@ def _navigate(container: Any, key: str, default_marker: Any) -> Any:
     return default_marker
 
 
-def get_path(data: Any, path: Union[str, List[Any]], default: Any = None) -> Any:
+def get_at(data: Any, path: Union[str, List[Any]], default: Any = None) -> Any:
     keys = _normalize(path)
     current = data
     MISSING = object()
@@ -55,7 +55,7 @@ def get_path(data: Any, path: Union[str, List[Any]], default: Any = None) -> Any
     return current
 
 
-def set_path(
+def set_at(
     data: Any,
     path: Union[str, List[Any]],
     value: Any,
@@ -169,7 +169,7 @@ def set_path(
     raise PathError("Cannot set value in non-container type", PathErrorCode.INVALID_PATH)
 
 
-def del_path(data: Any, path: Union[str, List[Any]], allow_list_mutation: bool = False) -> Any:
+def delete_at(data: Any, path: Union[str, List[Any]], allow_list_mutation: bool = False) -> Any:
     keys = _normalize(path)
     current = data
 
