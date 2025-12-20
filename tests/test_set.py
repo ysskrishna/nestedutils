@@ -42,11 +42,49 @@ class TestSetBasic:
         set_at(d, "a.-1", 999)
         assert d["a"] == [1, 2, 999]
     
+    def test_set_negative_index_modify_existing(self):
+        """Modify existing element using negative index (from docstring example)."""
+        data = [1, 2, 3]
+        set_at(data, "-1", 99)
+        assert data == [1, 2, 99]
+    
+    def test_set_negative_index_out_of_bounds_raises_error(self):
+        """Out-of-bounds negative index should raise PathError."""
+        data = [1, 2, 3]
+        with pytest.raises(PathError) as exc_info:
+            set_at(data, "-5", 99)
+        assert exc_info.value.code == PathErrorCode.INVALID_INDEX
+        # Verify data unchanged
+        assert data == [1, 2, 3]
+    
+    def test_set_negative_index_nested_structure(self):
+        """Set value using negative index in nested structure."""
+        d = {"items": [{"name": "apple"}, {"name": "banana"}]}
+        set_at(d, "items.-1.name", "cherry")
+        assert d["items"][-1]["name"] == "cherry"
+        assert d["items"][0]["name"] == "apple"
+    
+    def test_set_negative_index_intermediate_path(self):
+        """Set value where intermediate path uses negative index."""
+        d = {"data": [[1, 2], [3, 4], [5, 6]]}
+        set_at(d, "data.-1.-1", 99)
+        assert d["data"][-1][-1] == 99
+        assert d["data"][-1] == [5, 99]
+    
     def test_set_negative_index_extends_list(self):
         """Negative index on short list should still work."""
         d = {"a": [1]}
         set_at(d, "a.-1", 99)
         assert d == {"a": [99]}
+    
+    def test_set_negative_index_all_valid_indices(self):
+        """Test all valid negative indices for a list."""
+        d = {"a": [10, 20, 30, 40]}
+        set_at(d, "a.-1", 1)
+        set_at(d, "a.-2", 2)
+        set_at(d, "a.-3", 3)
+        set_at(d, "a.-4", 4)
+        assert d["a"] == [4, 3, 2, 1]
     
     def test_set_inside_list_of_dicts(self):
         """Set value inside list containing dicts."""
@@ -224,11 +262,26 @@ class TestSetErrorCases:
             set_at(d, ["a", "", "b"], 1)
         assert exc_info.value.code == PathErrorCode.EMPTY_PATH
     
+    def test_set_negative_index_on_empty_list(self):
+        """Can't use negative index on empty list."""
+        d = {"a": []}
+        with pytest.raises(PathError) as exc_info:
+            set_at(d, "a.-1", 5)
+        assert exc_info.value.code == PathErrorCode.INVALID_INDEX
+    
+    def test_set_negative_index_on_empty_list(self):
+        """Can't use negative index on empty list."""
+        d = {"a": []}
+        with pytest.raises(PathError) as exc_info:
+            set_at(d, "a.-1", 5)
+        assert exc_info.value.code == PathErrorCode.INVALID_INDEX
+    
     def test_set_negative_index_on_empty_dict(self):
         """Can't create list with negative index as first operation."""
         d = {}
-        with pytest.raises((PathError, IndexError)):
+        with pytest.raises(PathError) as exc_info:
             set_at(d, "a.-1", 5)
+        assert exc_info.value.code == PathErrorCode.INVALID_INDEX
     
     def test_numeric_key_on_existing_dict(self):
         """Setting numeric key on existing dict creates string key."""
@@ -320,6 +373,12 @@ class TestSetComplex:
         d = {"a": []}
         set_at(d, "a.5", 99)
         assert d == {"a": [None, None, None, None, None, 99]}
+    
+    def test_set_positive_extension_from_docstring(self):
+        """Positive index extension example from docstring."""
+        data = [1, 2, 3]
+        set_at(data, "5", 99)
+        assert data == [1, 2, 3, None, None, 99]
     
     def test_very_large_sparse_list(self):
         """Creating very large sparse list should work."""

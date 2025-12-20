@@ -37,6 +37,27 @@ class TestGetBasic:
         assert get_at(d, "a.-2") == 20
         assert get_at(d, "a.-3") == 10
     
+    def test_get_negative_index_nested_structure(self):
+        """Get value using negative index in nested list-dict structure."""
+        d = {"items": [{"name": "apple"}, {"name": "banana"}]}
+        assert get_at(d, "items.-1.name") == "banana"
+        assert get_at(d, "items.-2.name") == "apple"
+        assert get_at(d, "items.-1") == {"name": "banana"}
+    
+    def test_get_negative_index_out_of_bounds(self):
+        """Get with out-of-bounds negative index returns default."""
+        d = {"items": [{"name": "apple"}, {"name": "banana"}]}
+        assert get_at(d, "items.-5.name") is None
+        assert get_at(d, "items.-5.name", default="not found") == "not found"
+        assert get_at(d, "items.-10") is None
+    
+    def test_get_negative_index_deeply_nested(self):
+        """Get with negative index in deeply nested structure."""
+        d = {"data": [[1, 2, 3], [4, 5, 6], [7, 8, 9]]}
+        assert get_at(d, "data.-1.-1") == 9
+        assert get_at(d, "data.-1.0") == 7
+        assert get_at(d, "data.-2.-1") == 6
+    
     def test_get_nested_list_dict_mix(self):
         """Get value from mixed nested list and dict."""
         d = {"a": [{"b": 1}, {"b": 2}]}
@@ -49,6 +70,10 @@ class TestGetBasic:
         assert get_at(d, "a.5") is None
         assert get_at(d, "a.5", default=-1) == -1
         assert get_at(d, "a.-10") is None
+        # Test both positive and negative out-of-bounds
+        assert get_at(d, "a.100") is None
+        assert get_at(d, "a.-100") is None
+        assert get_at(d, "a.-3") is None  # Just out of bounds for length 2
     
     def test_get_list_index_non_integer(self):
         """Get with non-integer key on list returns default."""
@@ -74,6 +99,14 @@ class TestGetPathNormalization:
         """Get using list form with negative index."""
         d = {"a": [10, 20, 30]}
         assert get_at(d, ["a", -1]) == 30
+        assert get_at(d, ["a", -2]) == 20
+        assert get_at(d, ["a", -3]) == 10
+    
+    def test_path_list_with_negative_index_nested(self):
+        """Get using list form with negative index in nested structure."""
+        d = {"items": [{"name": "apple"}, {"name": "banana"}]}
+        assert get_at(d, ["items", -1, "name"]) == "banana"
+        assert get_at(d, ["items", -2, "name"]) == "apple"
     
     def test_unicode_keys(self):
         """Get with unicode keys."""

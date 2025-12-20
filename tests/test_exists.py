@@ -38,6 +38,25 @@ class TestExistsBasic:
         assert exists_at(d, "a.-4") is False
         assert exists_at(d, "a.-10") is False
     
+    def test_exists_negative_index_nested_structure(self):
+        """Check existence using negative index in nested list-dict structure."""
+        d = {"items": [{"name": "apple"}, {"name": "banana"}]}
+        assert exists_at(d, "items.-1.name") is True
+        assert exists_at(d, "items.-2.name") is True
+        assert exists_at(d, "items.-1") is True
+        assert exists_at(d, "items.-5.name") is False
+        assert exists_at(d, "items.5.name") is False
+    
+    def test_exists_negative_index_out_of_bounds(self):
+        """Check existence with out-of-bounds negative index."""
+        d = {"a": [10, 20, 30]}
+        assert exists_at(d, "a.-4") is False
+        assert exists_at(d, "a.-5") is False
+        assert exists_at(d, "a.-100") is False
+        # Test both positive and negative out-of-bounds
+        assert exists_at(d, "a.10") is False
+        assert exists_at(d, "a.-10") is False
+    
     def test_exists_nested_list_dict_mix(self):
         """Check existence in mixed nested list and dict."""
         d = {"a": [{"b": 1}, {"b": 2}]}
@@ -77,7 +96,16 @@ class TestExistsPathNormalization:
         """Check existence using list form with negative index."""
         d = {"a": [10, 20, 30]}
         assert exists_at(d, ["a", -1]) is True
+        assert exists_at(d, ["a", -2]) is True
+        assert exists_at(d, ["a", -3]) is True
         assert exists_at(d, ["a", -4]) is False
+    
+    def test_exists_path_list_with_negative_index_nested(self):
+        """Check existence using list form with negative index in nested structure."""
+        d = {"items": [{"name": "apple"}, {"name": "banana"}]}
+        assert exists_at(d, ["items", -1, "name"]) is True
+        assert exists_at(d, ["items", -2, "name"]) is True
+        assert exists_at(d, ["items", -5, "name"]) is False
     
     def test_exists_unicode_keys(self):
         """Check existence with unicode keys."""

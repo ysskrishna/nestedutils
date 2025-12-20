@@ -59,6 +59,43 @@ class TestDeleteListOperations:
         assert val == 30
         assert d == {"a": [10, 20]}
     
+    def test_delete_negative_index_all_positions(self):
+        """Delete using negative index at various positions."""
+        d = {"a": [10, 20, 30, 40]}
+        # Delete last
+        val = delete_at(d, "a.-1", allow_list_mutation=True)
+        assert val == 40
+        assert d["a"] == [10, 20, 30]
+        # Delete last again (was middle)
+        val = delete_at(d, "a.-1", allow_list_mutation=True)
+        assert val == 30
+        assert d["a"] == [10, 20]
+        # Delete first using negative
+        val = delete_at(d, "a.-2", allow_list_mutation=True)
+        assert val == 10
+        assert d["a"] == [20]
+    
+    def test_delete_negative_index_out_of_bounds(self):
+        """Delete with out-of-bounds negative index should raise PathError."""
+        d = {"items": [1, 2, 3]}
+        with pytest.raises(PathError) as exc_info:
+            delete_at(d, "items.-5", allow_list_mutation=True)
+        assert exc_info.value.code == PathErrorCode.INVALID_INDEX
+        # Verify list unchanged
+        assert d["items"] == [1, 2, 3]
+    
+    def test_delete_negative_index_nested_structure(self):
+        """Delete using negative index in nested structure."""
+        d = {"items": [{"name": "apple"}, {"name": "banana"}, {"name": "cherry"}]}
+        val = delete_at(d, "items.-1.name", allow_list_mutation=False)
+        assert val == "cherry"
+        assert d["items"][-1] == {}
+        # Delete the whole last item
+        val = delete_at(d, "items.-1", allow_list_mutation=True)
+        assert val == {}
+        assert len(d["items"]) == 2
+        assert d["items"][-1]["name"] == "banana"
+    
     def test_delete_first_item(self):
         """Delete first item from list."""
         d = {"a": [1, 2, 3]}
@@ -79,6 +116,13 @@ class TestDeleteListOperations:
         d = {"a": []}
         with pytest.raises(PathError) as exc_info:
             delete_at(d, "a.0", allow_list_mutation=True)
+        assert exc_info.value.code == PathErrorCode.INVALID_INDEX
+    
+    def test_delete_negative_index_from_empty_list(self):
+        """Delete with negative index from empty list should fail."""
+        d = {"a": []}
+        with pytest.raises(PathError) as exc_info:
+            delete_at(d, "a.-1", allow_list_mutation=True)
         assert exc_info.value.code == PathErrorCode.INVALID_INDEX
     
     def test_delete_list_index_out_of_bounds(self):

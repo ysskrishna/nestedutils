@@ -1,5 +1,5 @@
 import pytest
-from nestedutils import get_at, set_at, delete_at
+from nestedutils import get_at, set_at, delete_at, exists_at
 from nestedutils.exceptions import PathError, PathErrorCode
 
 
@@ -174,4 +174,78 @@ class TestSpecialCharacters:
         d = {}
         set_at(d, ["key\nwith\nnewlines"], 1)
         assert get_at(d, ["key\nwith\nnewlines"]) == 1
+
+
+class TestNegativeIndexEdgeCases:
+    """Comprehensive edge cases for negative indices."""
+    
+    def test_negative_index_boundary_conditions(self):
+        """Test negative indices at boundaries."""
+        d = {"a": [10, 20, 30]}
+        # Valid negative indices
+        assert get_at(d, "a.-1") == 30
+        assert get_at(d, "a.-2") == 20
+        assert get_at(d, "a.-3") == 10
+        # Just out of bounds
+        assert get_at(d, "a.-4") is None
+        assert get_at(d, "a.-5") is None
+    
+    def test_negative_index_single_element_list(self):
+        """Negative index on single element list."""
+        d = {"a": [42]}
+        assert get_at(d, "a.-1") == 42
+        assert get_at(d, "a.-2") is None
+        # Can modify with negative index
+        set_at(d, "a.-1", 99)
+        assert d["a"] == [99]
+    
+    def test_negative_index_in_intermediate_path(self):
+        """Negative index used in intermediate path steps."""
+        d = {"data": [[1, 2], [3, 4], [5, 6]]}
+        # Navigate using negative index, then access nested
+        assert get_at(d, "data.-1.0") == 5
+        assert get_at(d, "data.-2.-1") == 4
+        # Set using negative index in intermediate path
+        set_at(d, "data.-1.-1", 99)
+        assert d["data"][-1] == [5, 99]
+    
+    def test_negative_index_with_tuples(self):
+        """Negative index works with tuples (read-only)."""
+        d = {"a": (10, 20, 30)}
+        assert get_at(d, "a.-1") == 30
+        assert get_at(d, "a.-2") == 20
+        assert exists_at(d, "a.-1") is True
+        assert exists_at(d, "a.-4") is False
+        # Cannot modify tuples
+        with pytest.raises(PathError) as exc_info:
+            set_at(d, "a.-1", 99)
+        assert exc_info.value.code == PathErrorCode.IMMUTABLE_CONTAINER
+    
+    def test_negative_index_very_large_negative(self):
+        """Very large negative numbers should be out of bounds."""
+        d = {"a": [1, 2, 3]}
+        assert get_at(d, "a.-1000") is None
+        assert get_at(d, "a.-999999") is None
+        # Should not raise, just return default
+    
+    def test_negative_index_chaining(self):
+        """Chaining multiple negative index operations."""
+        d = {"levels": [[[1, 2], [3, 4]], [[5, 6], [7, 8]]]}
+        # Navigate through multiple levels using negative indices
+        assert get_at(d, "levels.-1.-1.-1") == 8
+        assert get_at(d, "levels.-1.-1.-2") == 7
+        assert get_at(d, "levels.-2.-1.-1") == 4
+    
+    def test_negative_index_after_list_mutation(self):
+        """Negative index behavior after list mutations."""
+        d = {"items": [1, 2, 3, 4, 5]}
+        # Delete using positive index
+        delete_at(d, "items.1", allow_list_mutation=True)
+        assert d["items"] == [1, 3, 4, 5]
+        # Negative indices should still work correctly
+        assert get_at(d, "items.-1") == 5
+        assert get_at(d, "items.-2") == 4
+        assert get_at(d, "items.-4") == 1
+        # -5 should now be out of bounds
+        assert get_at(d, "items.-5") is None
 
