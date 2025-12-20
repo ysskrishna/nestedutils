@@ -1,14 +1,16 @@
 from typing import Any, List, Union, Optional
 from .exceptions import PathError
-from .enums import PathErrorCode, FillStrategy
+from .enums import PathErrorCode, FillStrategy, PathLike
+from .constants import MAX_DEPTH, MAX_LIST_SIZE
 
 
-def normalize_path(path: Union[str, List[Any]]) -> List[str]:
+def normalize_path(path: PathLike) -> List[str]:
     """Normalize path to list of strings and validate.
     
     Converts path to a list of string keys, validating that:
     - Path is not empty
     - No keys in the path are empty strings
+    - Path depth does not exceed MAX_DEPTH
     
     Args:
         path: Either a dot-notation string (e.g., "a.b.c") or a list of keys.
@@ -17,7 +19,8 @@ def normalize_path(path: Union[str, List[Any]]) -> List[str]:
         List of string keys representing the path.
     
     Raises:
-        PathError: If path format is invalid, path is empty, or contains empty keys.
+        PathError: If path format is invalid, path is empty, contains empty keys,
+            or exceeds maximum depth.
     """
     if isinstance(path, list):
         keys = [str(x) for x in path]
@@ -31,6 +34,12 @@ def normalize_path(path: Union[str, List[Any]]) -> List[str]:
     
     if not keys:
         raise PathError("Path cannot be empty", PathErrorCode.EMPTY_PATH)
+    
+    if len(keys) > MAX_DEPTH:
+        raise PathError(
+            f"Path depth exceeds maximum of {MAX_DEPTH}",
+            PathErrorCode.INVALID_PATH
+        )
     
     if any(key == "" for key in keys):
         raise PathError("Path cannot contain empty keys", PathErrorCode.EMPTY_PATH)
@@ -115,6 +124,7 @@ def resolve_write_index(container: list, key: str, allow_extension: bool = True)
     Write operations have stricter semantics:
     - Negative indices must reference existing elements (no extension)
     - Positive indices can extend the list if allow_extension=True
+    - Positive indices cannot exceed MAX_LIST_SIZE to prevent memory exhaustion
     
     Args:
         container: The list to index into.
@@ -126,7 +136,7 @@ def resolve_write_index(container: list, key: str, allow_extension: bool = True)
         Resolved positive index.
     
     Raises:
-        PathError: If index is out of bounds or key cannot be parsed as integer.
+        PathError: If index is out of bounds, exceeds MAX_LIST_SIZE, or key cannot be parsed as integer.
     """
     idx = parse_int_key(key)
     length = len(container)
@@ -139,6 +149,13 @@ def resolve_write_index(container: list, key: str, allow_extension: bool = True)
                 PathErrorCode.INVALID_INDEX
             )
         return resolved
+    
+    # Check maximum list size when extension is allowed
+    if allow_extension and idx > MAX_LIST_SIZE:
+        raise PathError(
+            f"List index {idx} exceeds maximum size {MAX_LIST_SIZE}",
+            PathErrorCode.INVALID_INDEX
+        )
     
     if not allow_extension and idx >= length:
         raise PathError(
