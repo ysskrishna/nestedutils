@@ -52,7 +52,7 @@ pip install nestedutils
 ## Quick Start
 
 ```python
-from nestedutils import get_at, set_at, delete_at
+from nestedutils import get_at, set_at, delete_at, exists_at
 
 # Create a nested structure
 data = {}
@@ -67,6 +67,10 @@ set_at(data, "user.hobbies.1", "coding")
 name = get_at(data, "user.name")  # "John"
 age = get_at(data, "user.age")    # 30
 first_hobby = get_at(data, "user.hobbies.0")  # "reading"
+
+# Check if path exists
+if exists_at(data, "user.name"):
+    print("User name exists!")
 
 # Delete values
 delete_at(data, "user.age")
@@ -127,6 +131,32 @@ set_at(data, "items.0.name", "Item 1")
 data = {}
 set_at(data, "items.5", "Item 6", fill_strategy="none")
 # Creates: {"items": [None, None, None, None, None, "Item 6"]}
+```
+
+### `exists_at(data, path)`
+
+Check if a path exists in a nested data structure.
+
+**Parameters:**
+
+- `data`: The data structure to navigate (dict, list, tuple, or nested combinations)
+- `path`: Path to check (string with dot notation or list of keys/indices)
+
+**Returns:** `True` if the path exists, `False` otherwise
+
+**Raises:** `PathError` if the path format is invalid
+
+**Examples:**
+
+```python
+data = {"a": {"b": {"c": 5}}}
+exists_at(data, "a.b.c")  # True
+exists_at(data, "a.b.d")  # False
+
+data = {"items": [{"name": "apple"}, {"name": "banana"}]}
+exists_at(data, "items.1.name")  # True
+exists_at(data, "items.5.name")  # False
+exists_at(data, "items.-1.name")  # True (negative index)
 ```
 
 ### `delete_at(data, path, allow_list_mutation=False)`

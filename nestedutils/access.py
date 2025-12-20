@@ -254,6 +254,55 @@ def set_at(
     raise PathError("Cannot set value in non-container type", PathErrorCode.INVALID_PATH)
 
 
+def exists_at(data: Any, path: Union[str, List[Any]]) -> bool:
+    """Check if a path exists in a nested data structure.
+    
+    Navigates through nested dictionaries, lists, and tuples using a path
+    specified as either a dot-notation string or a list of keys/indices.
+    Returns True if the path exists, False otherwise. This function does
+    not raise exceptions for missing paths.
+    
+    Args:
+        data: The data structure to navigate (dict, list, tuple, or nested
+            combinations of these types).
+        path: Path to check. Can be a dot-notation string (e.g., "a.b.c")
+            or a list of keys/indices (e.g., ["a", "b", "c"]). For lists,
+            use numeric indices (e.g., "items.0.name" or "items.-1" for
+            negative indexing).
+    
+    Returns:
+        True if the path exists, False otherwise.
+    
+    Raises:
+        PathError: If the path format is invalid (e.g., non-string/list path).
+    
+    Examples:
+        >>> data = {"a": {"b": {"c": 5}}}
+        >>> exists_at(data, "a.b.c")
+        True
+        >>> exists_at(data, "a.b.d")
+        False
+        >>> data = {"items": [{"name": "apple"}, {"name": "banana"}]}
+        >>> exists_at(data, "items.1.name")
+        True
+        >>> exists_at(data, "items.-1.name")
+        True
+        >>> exists_at(data, "items.5.name")
+        False
+        >>> exists_at(data, ["items", "0", "name"])
+        True
+    """
+    keys = _normalize(path)
+    current = data
+    MISSING = object()
+
+    for key in keys:
+        current = _navigate(current, key, MISSING)
+        if current is MISSING:
+            return False
+    return True
+
+
 def delete_at(data: Any, path: Union[str, List[Any]], allow_list_mutation: bool = False) -> Any:
     """Delete a value from a nested data structure.
     
