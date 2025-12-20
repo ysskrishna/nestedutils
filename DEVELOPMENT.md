@@ -46,7 +46,7 @@ uv run pytest
 ### Running Specific Test Files
 
 ```bash
-uv run pytest tests/test_access.py
+uv run pytest tests/test_get.py
 ```
 
 ### Building the Package
@@ -72,23 +72,6 @@ uv pip install dist/nestedutils-*.whl
 
 # Or install in editable mode for development
 uv pip install -e .
-```
-
-## Project Structure
-
-```
-nestedutils/
-├── nestedutils/          # Main package code
-│   ├── __init__.py       # Package initialization
-│   ├── access.py         # Core path access functions
-│   ├── exceptions.py     # Custom exceptions
-│   └── utils.py          # Utility functions
-├── tests/                # Test suite
-│   ├── __init__.py
-│   └── test_access.py    # Main test file
-├── pyproject.toml        # Project configuration and dependencies
-├── uv.lock              # Locked dependency versions
-└── README.md            # User-facing documentation
 ```
 
 ## Additional Resources

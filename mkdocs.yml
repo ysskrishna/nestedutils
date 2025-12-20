@@ -10,7 +10,8 @@ site_dir: ../site
 
 
 nav:
-  - Home: docs/index.md
+  - Project Readme: README.md
+  - API Reference: docs/index.md
   - Development: DEVELOPMENT.md
   - Changelog: CHANGELOG.md
 
