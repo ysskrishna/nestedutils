@@ -31,6 +31,12 @@ plugins:
 theme:
   name: material
   locale: en
+  features:
+    - navigation.top
+    - navigation.footer
+    - content.code.copy
+    - content.code.annotate
+
 
 markdown_extensions:
   - admonition
