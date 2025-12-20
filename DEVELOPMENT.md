@@ -17,22 +17,21 @@ If you don't have `uv` installed, you can install it using [UV Getting Started](
 
 1. Clone the repository:
 
-   ```bash
-   git clone https://github.com/ysskrishna/nestedutils.git
-   cd nestedutils
-   ```
+```bash
+git clone https://github.com/ysskrishna/nestedutils.git
+cd nestedutils
+```
 
 2. Install the project and development dependencies using `uv`:
 
-   ```bash
-   uv sync --dev
-   ```
+```bash
+uv sync --dev
+```
 
-   This will:
-
-   - Create a virtual environment (if it doesn't exist)
-   - Install the project in editable mode
-   - Install all development dependencies (including `pytest`)
+This will:
+- Create a virtual environment (if it doesn't exist)
+- Install the project in editable mode
+- Install all development dependencies (including `pytest`)
 
 ## Local Testing
 
