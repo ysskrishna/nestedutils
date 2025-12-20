@@ -47,6 +47,9 @@ extra:
   social:
     - icon: fontawesome/brands/python
       link: https://pypi.org/project/nestedutils/
+
+    - icon: fontawesome/solid/external-link
+      link: https://ysskrishna.vercel.app
     - icon: fontawesome/brands/github
       link: https://github.com/ysskrishna
     - icon: fontawesome/brands/linkedin

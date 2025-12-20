@@ -30,11 +30,12 @@ user_name = get_at(data, "users.0.profile.name")
 ## Features
 
 - **Simple Path Syntax**: Use dot-notation strings (`"a.b.c"`) or lists (`["a", "b", "c"]`) to navigate nested structures
-- **Mixed Data Types**: Seamlessly work with dictionaries, lists
+- **Mixed Data Types**: Seamlessly work with dictionaries, lists, and tuples (read-only for tuples)
 - **List Index Support**: Access list elements using numeric indices, including negative indices
 - **Auto-creation**: Automatically create missing intermediate containers when setting values
 - **Flexible Fill Strategies**: Control how missing containers are created with different fill strategies
 - **Type Safety**: Comprehensive error handling with descriptive error messages and error codes
+- **Safety Limits**: Built-in protection against excessive nesting (max depth: 100) and oversized lists (max index: 10,000)
 - **Zero Dependencies**: Pure Python implementation with no external dependencies
 
 ## Use Cases
@@ -112,10 +113,12 @@ Set a value in a nested data structure, creating intermediate containers as need
 - `path`: Path where to set the value (string with dot notation or list of keys/indices)
 - `value`: The value to set
 - `fill_strategy`: How to fill missing containers (default: `"auto"`)
-  - `"auto"`: Intelligently creates `{}` for dicts, `[]` for lists
+  - `"auto"`: Intelligently creates `{}` for dict keys, `[]` for list indices, and `None` for sparse list gaps
   - `"none"`: Fills missing list items with `None`
   - `"dict"`: Always creates dictionaries
   - `"list"`: Always creates lists
+
+**Note:** Positive indices can extend lists (filling gaps as needed), but negative indices can only modify existing elements.
 
 **Examples:**
 
@@ -131,6 +134,14 @@ set_at(data, "items.0.name", "Item 1")
 data = {}
 set_at(data, "items.5", "Item 6", fill_strategy="none")
 # Creates: {"items": [None, None, None, None, None, "Item 6"]}
+
+data = [1, 2, 3]
+set_at(data, "5", 99)  # Extends list with None gaps
+# Creates: [1, 2, 3, None, None, 99]
+
+data = [1, 2, 3]
+set_at(data, "-1", 100)  # Updates existing last element
+# Creates: [1, 2, 100]
 ```
 
 ### `exists_at(data, path)`
@@ -222,13 +233,15 @@ set_at(data, ["user.name", "last"], "Doe")
 
 ### Negative List Indices
 
-Negative indices work like Python list indexing:
+Negative indices work like Python list indexing for reading and updating existing elements:
 
 ```python
 data = {"items": [10, 20, 30]}
 get_at(data, "items.-1")  # 30 (last item)
-set_at(data, "items.-1", 999)  # Updates last item
+set_at(data, "items.-1", 999)  # Updates last item (must exist)
 ```
+
+**Important**: Negative indices can only reference existing elements. They cannot extend lists - attempting to use a negative index that's out of bounds will raise a `PathError`.
 
 ### Working with Tuples
 
@@ -249,6 +262,15 @@ data = {"a": None}
 set_at(data, "a.b.c", 10)
 # Replaces None with container: {"a": {"b": {"c": 10}}}
 ```
+
+## Safety Limits
+
+The library includes built-in safety limits to prevent excessive resource usage:
+
+- **Maximum Path Depth**: 100 levels (prevents deeply nested paths that could cause stack issues)
+- **Maximum List Index**: 10,000 (prevents creating extremely large sparse lists)
+
+These limits help protect against accidental memory exhaustion or performance issues. If you hit these limits, you'll receive a `PathError` with a clear message.
 
 ## Requirements
 
