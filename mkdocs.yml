@@ -13,7 +13,7 @@ site_dir: ../site
 nav:
   - Project Readme: README.md
   - API Reference: docs/index.md
-  - Development: DEVELOPMENT.md
+  - Contributing: CONTRIBUTING.md
   - Changelog: CHANGELOG.md
 
 plugins:
