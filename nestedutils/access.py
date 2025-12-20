@@ -1,5 +1,6 @@
 from typing import Any, Union, List
-from .exceptions import PathError, PathErrorCode
+from .exceptions import PathError
+from .enums import PathErrorCode, FillStrategy, FillStrategyType
 
 def _normalize(path: Union[str, List[Any]]) -> List[str]:
     if isinstance(path, list):
@@ -95,7 +96,7 @@ def set_at(
     data: Any,
     path: Union[str, List[Any]],
     value: Any,
-    fill_strategy: str = "auto"
+    fill_strategy: FillStrategyType = "auto"
 ) -> None:
     """Set a value in a nested data structure, creating intermediate containers as needed.
     
@@ -148,10 +149,14 @@ def set_at(
         >>> data
         {'a': {'b': {'c': 10}}}
     """
-    # Validate fill_strategy
-    valid_strategies = {"auto", "none", "dict", "list"}
-    if fill_strategy not in valid_strategies:
-        raise PathError(f"Invalid fill_strategy: {fill_strategy}. Must be one of {valid_strategies}", PathErrorCode.INVALID_FILL_STRATEGY)
+    try:
+        fill_strategy = FillStrategy(fill_strategy)
+    except ValueError:
+        valid_strategies = {s.value for s in FillStrategy}
+        raise PathError(
+            f"Invalid fill_strategy: {fill_strategy}. Must be one of {valid_strategies}",
+            PathErrorCode.INVALID_FILL_STRATEGY
+        )
 
     keys = _normalize(path)
     
@@ -167,17 +172,17 @@ def set_at(
         # dict case
         if isinstance(current, dict):
             if key not in current:
-                if fill_strategy == "dict":
+                if fill_strategy == FillStrategy.DICT:
                     current[key] = {}
-                elif fill_strategy == "list":
+                elif fill_strategy == FillStrategy.LIST:
                     current[key] = []
                 else:  # auto or none - both intelligently create containers
                     current[key] = [] if _is_int_key(next_key) else {}
             elif current[key] is None:
                 # Replace None with appropriate container when navigating deeper
-                if fill_strategy == "dict":
+                if fill_strategy == FillStrategy.DICT:
                     current[key] = {}
-                elif fill_strategy == "list":
+                elif fill_strategy == FillStrategy.LIST:
                     current[key] = []
                 else:  # auto or none
                     current[key] = [] if _is_int_key(next_key) else {}
@@ -192,9 +197,9 @@ def set_at(
 
             # Fill gaps before the target index
             while len(current) < idx:
-                if fill_strategy == "dict":
+                if fill_strategy == FillStrategy.DICT:
                     current.append({})
-                elif fill_strategy == "list":
+                elif fill_strategy == FillStrategy.LIST:
                     current.append([])
                 else:
                     # auto or none - fill sparse list items with None
@@ -202,18 +207,18 @@ def set_at(
             
             # Now create the container at the target index if needed
             if len(current) == idx:
-                if fill_strategy == "dict":
+                if fill_strategy == FillStrategy.DICT:
                     current.append({})
-                elif fill_strategy == "list":
+                elif fill_strategy == FillStrategy.LIST:
                     current.append([])
                 else:
                     # auto or none - create container based on next key
                     current.append([] if _is_int_key(next_key) else {})
             elif current[idx] is None:
                 # Replace None with appropriate container when navigating deeper
-                if fill_strategy == "dict":
+                if fill_strategy == FillStrategy.DICT:
                     current[idx] = {}
-                elif fill_strategy == "list":
+                elif fill_strategy == FillStrategy.LIST:
                     current[idx] = []
                 else:  # auto or none
                     current[idx] = [] if _is_int_key(next_key) else {}

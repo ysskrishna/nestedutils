@@ -40,7 +40,7 @@ user_name = get_at(data, "users.0.profile.name")
 ## Use Cases
 
 - **JSON API Responses**: Safely extract values from complex, unpredictable JSON responses without dozens of checks.
-- **Configuration Management**: easily read and modify deeply nested settings in configuration dictionaries.
+- **Configuration Management**: Easily read and modify deeply nested settings in configuration dictionaries.
 - **Data Transformation**: Rapidly remap data from one complex structure to another using `get_at` and `set_at`.
 
 ## Installation

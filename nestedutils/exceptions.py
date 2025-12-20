@@ -1,14 +1,5 @@
-from enum import Enum
 from typing import Optional
-
-class PathErrorCode(Enum):
-    INVALID_INDEX = "INVALID_INDEX"
-    MISSING_KEY = "MISSING_KEY"
-    EMPTY_PATH = "EMPTY_PATH"
-    IMMUTABLE_CONTAINER = "IMMUTABLE_CONTAINER"
-    INVALID_PATH = "INVALID_PATH"
-    INVALID_FILL_STRATEGY = "INVALID_FILL_STRATEGY"
-
+from .enums import PathErrorCode
 
 class PathError(Exception):
     """Raised when a nested path cannot be navigated or modified."""
