@@ -222,6 +222,35 @@ class TestExistsInvalidPaths:
         with pytest.raises(PathError) as exc_info:
             exists_at(d, ["a", "", "b"])
         assert exc_info.value.code == PathErrorCode.EMPTY_PATH
+    
+    def test_exists_path_validation_edge_cases(self):
+        """Test path validation for various edge cases with dots."""
+        d = {"a": {"b": 1}}
+        
+        # Leading dot
+        with pytest.raises(PathError) as exc_info:
+            exists_at(d, ".a.b")
+        assert exc_info.value.code == PathErrorCode.EMPTY_PATH
+        
+        # Trailing dot
+        with pytest.raises(PathError) as exc_info:
+            exists_at(d, "a.b.")
+        assert exc_info.value.code == PathErrorCode.EMPTY_PATH
+        
+        # Just dots
+        with pytest.raises(PathError) as exc_info:
+            exists_at(d, "...")
+        assert exc_info.value.code == PathErrorCode.EMPTY_PATH
+        
+        # Multiple consecutive dots
+        with pytest.raises(PathError) as exc_info:
+            exists_at(d, "a...b")
+        assert exc_info.value.code == PathErrorCode.EMPTY_PATH
+        
+        # Leading and trailing dots
+        with pytest.raises(PathError) as exc_info:
+            exists_at(d, ".a.b.")
+        assert exc_info.value.code == PathErrorCode.EMPTY_PATH
 
 
 class TestExistsWithTuples:

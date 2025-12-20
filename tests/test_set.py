@@ -262,6 +262,35 @@ class TestSetErrorCases:
             set_at(d, ["a", "", "b"], 1)
         assert exc_info.value.code == PathErrorCode.EMPTY_PATH
     
+    def test_set_path_validation_edge_cases(self):
+        """Test path validation for various edge cases with dots."""
+        d = {}
+        
+        # Leading dot
+        with pytest.raises(PathError) as exc_info:
+            set_at(d, ".a.b", 1)
+        assert exc_info.value.code == PathErrorCode.EMPTY_PATH
+        
+        # Trailing dot
+        with pytest.raises(PathError) as exc_info:
+            set_at(d, "a.b.", 1)
+        assert exc_info.value.code == PathErrorCode.EMPTY_PATH
+        
+        # Just dots
+        with pytest.raises(PathError) as exc_info:
+            set_at(d, "...", 1)
+        assert exc_info.value.code == PathErrorCode.EMPTY_PATH
+        
+        # Multiple consecutive dots
+        with pytest.raises(PathError) as exc_info:
+            set_at(d, "a...b", 1)
+        assert exc_info.value.code == PathErrorCode.EMPTY_PATH
+        
+        # Leading and trailing dots
+        with pytest.raises(PathError) as exc_info:
+            set_at(d, ".a.b.", 1)
+        assert exc_info.value.code == PathErrorCode.EMPTY_PATH
+    
     def test_set_negative_index_on_empty_list(self):
         """Can't use negative index on empty list."""
         d = {"a": []}
