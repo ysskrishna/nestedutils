@@ -11,6 +11,8 @@ Thank you for your interest in contributing to `nestedutils`! This guide will he
 - [Testing](#testing)
 - [Submitting Changes](#submitting-changes)
 - [Code Style](#code-style)
+- [Building the Package](#building-the-package)
+- [Documentation](#documentation)
 - [Additional Resources](#additional-resources)
 
 ## Code of Conduct
@@ -197,6 +199,30 @@ uv pip install dist/nestedutils-*.whl
 uv pip install -e .
 ```
 
+## Documentation
+
+This project uses [MkDocs](https://www.mkdocs.org/) with the [Material theme](https://github.com/squidfunk/mkdocs-material) for documentation.
+
+### Serving Documentation Locally
+
+To preview the documentation locally with live reload:
+
+```bash
+uv run mkdocs serve
+```
+
+This will start a local development server (usually at `http://127.0.0.1:8000`) that automatically reloads when you make changes to the documentation files.
+
+### Building Documentation
+
+To build the documentation as static HTML files:
+
+```bash
+uv run mkdocs build
+```
+
+This will create a `site/` directory containing the static HTML files ready for deployment.
+
 ## Additional Resources
 
 - [uv Documentation](https://docs.astral.sh/uv/)
@@ -204,6 +230,8 @@ uv pip install -e .
 - [Python Packaging Guide](https://packaging.python.org/)
 - [PEP 8 Style Guide](https://pep8.org/)
 - [Type Hints Documentation](https://docs.python.org/3/library/typing.html)
+- [MkDocs Documentation](https://www.mkdocs.org/)
+- [Material for MkDocs](https://github.com/squidfunk/mkdocs-material)
 
 ## Questions?
 

@@ -5,6 +5,33 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0]
+
+### Added
+
+- `exists_at()` function to check if a path exists in nested data structures
+- Safety limits: Maximum path depth (100 levels) and maximum list index (10,000) to prevent resource exhaustion
+- Comprehensive MkDocs documentation with Material theme
+- CONTRIBUTING.md guide for contributors
+- GitHub Actions workflow for automated documentation deployment
+
+### Changed
+
+- **BREAKING**: Renamed API functions for consistency:
+  - `get_path()` → `get_at()`
+  - `set_path()` → `set_at()`
+  - `del_path()` → `delete_at()`
+- Improved docstrings across all functions with detailed examples and parameter descriptions
+- Enhanced path validation with better error messages for edge cases
+- Refactored fill strategy handling using enums for better type safety
+- Updated README with improved documentation and examples
+
+### Fixed
+
+- Fixed bugs with negative index handling in `get_at()`, `set_at()`, and `delete_at()` methods
+- Improved validation in path normalization function
+- Fixed edge cases with empty paths and empty keys
+
 ## [1.0.1]
 
 ### Added
@@ -44,5 +71,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Immutable container protection (tuples cannot be modified)
 - Safe list deletion (requires explicit `allow_list_mutation=True` flag)
 
+[1.1.0]: https://github.com/ysskrishna/nestedutils/releases/tag/v1.1.0
 [1.0.1]: https://github.com/ysskrishna/nestedutils/releases/tag/v1.0.1
 [1.0.0]: https://github.com/ysskrishna/nestedutils/releases/tag/v1.0.0
