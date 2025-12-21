@@ -7,8 +7,25 @@ repo_name: "ysskrishna/nestedutils"
 repo_url: "https://github.com/ysskrishna/nestedutils"
 copyright: Copyright &copy; 2025 Y. Siva Sai Krishna
 docs_dir: .
-site_dir: ../site
+site_dir: site
 
+# Exclude directories and files that shouldn't be in the documentation
+exclude_docs: |
+  nestedutils/
+  tests/
+  workspace/
+  site/
+  __pycache__/
+  .github/
+  .git/
+  *.pyc
+  *.pyo
+  *.pyd
+  .pytest_cache/
+  .mypy_cache/
+  .ruff_cache/
+  uv.lock
+  .DS_Store
 
 nav:
   - Project Readme: README.md
