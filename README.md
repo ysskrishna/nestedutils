@@ -8,7 +8,7 @@
 
 The lightweight Python library for safe, simple, dot-notation access to nested dicts and lists. Effortlessly get, set, and delete values deep in your complex JSON, API responses, and config files without verbose error-checking or handling KeyError exceptions.
 
-![OG Image](https://raw.githubusercontent.com/ysskrishna/pypi-package-stats/main/media/og.png)
+![OG Image](https://raw.githubusercontent.com/ysskrishna/nestedutils/main/media/og.png)
 
 ## Why nestedutils?
 
