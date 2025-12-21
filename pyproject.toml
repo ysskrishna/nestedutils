@@ -56,7 +56,7 @@ dependencies = []
 
 [project.urls]
 Homepage = "https://github.com/ysskrishna/nestedutils"
-Documentation = "https://github.com/ysskrishna/nestedutils#readme"
+Documentation = "https://ysskrishna.github.io/nestedutils/"
 Repository = "https://github.com/ysskrishna/nestedutils.git"
 Issues = "https://github.com/ysskrishna/nestedutils/issues"
 
