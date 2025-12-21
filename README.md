@@ -287,7 +287,7 @@ MIT License - see [LICENSE](https://github.com/ysskrishna/nestedutils/blob/main/
 
 ## Contributing
 
-Contributions are welcome! Please read our [Contributing Guide](CONTRIBUTING.md) for details on our code of conduct, development setup, and the process for submitting pull requests.
+Contributions are welcome! Please read our [Contributing Guide](https://github.com/ysskrishna/nestedutils/blob/main/CONTRIBUTING.md) for details on our code of conduct, development setup, and the process for submitting pull requests.
 
 ## Support
 
