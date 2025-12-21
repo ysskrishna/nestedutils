@@ -1,6 +1,6 @@
 [project]
 name = "nestedutils"
-version = "1.1.0"
+version = "1.1.1"
 description = "The lightweight Python library for safe, simple, dot-notation access to nested dicts and lists. Effortlessly get, set, and delete values deep in your complex JSON, API responses, and config files without verbose error-checking or handling KeyError exceptions."
 readme = "README.md"
 requires-python = ">=3.8"
