@@ -300,11 +300,11 @@ If you find this library useful, please consider:
 
 ## Links
 
-- **Documentation**: https://ysskrishna.github.io/nestedutils/
-- **PyPI**: https://pypi.org/project/nestedutils/
-- **Homepage**: https://github.com/ysskrishna/nestedutils
-- **Repository**: https://github.com/ysskrishna/nestedutils.git
-- **Issues**: https://github.com/ysskrishna/nestedutils/issues
+- **Documentation**: [ysskrishna.github.io/nestedutils](https://ysskrishna.github.io/nestedutils/)
+- **PyPI**: [pypi.org/project/nestedutils](https://pypi.org/project/nestedutils/)
+- **Homepage**: [github.com/ysskrishna/nestedutils](https://github.com/ysskrishna/nestedutils)
+- **Repository**: [github.com/ysskrishna/nestedutils.git](https://github.com/ysskrishna/nestedutils.git)
+- **Issues**: [github.com/ysskrishna/nestedutils/issues](https://github.com/ysskrishna/nestedutils/issues)
 
 ## Author
 
