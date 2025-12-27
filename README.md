@@ -274,17 +274,13 @@ The library includes built-in safety limits to prevent excessive resource usage:
 
 These limits help protect against accidental memory exhaustion or performance issues. If you hit these limits, you'll receive a `PathError` with a clear message.
 
-## Requirements
 
-- Python 3.8+
+## Links
 
-## Changelog
-
-See [CHANGELOG.md](https://github.com/ysskrishna/nestedutils/blob/main/CHANGELOG.md) for a detailed list of changes and version history.
-
-## License
-
-MIT License - see [LICENSE](https://github.com/ysskrishna/nestedutils/blob/main/LICENSE) file for details.
+- **PyPI**: [pypi.org/project/nestedutils](https://pypi.org/project/nestedutils/)
+- **Documentation**: [ysskrishna.github.io/nestedutils](https://ysskrishna.github.io/nestedutils/)
+- **Repository**: [github.com/ysskrishna/nestedutils.git](https://github.com/ysskrishna/nestedutils.git)
+- **Issues**: [github.com/ysskrishna/nestedutils/issues](https://github.com/ysskrishna/nestedutils/issues)
 
 ## Contributing
 
@@ -299,13 +295,10 @@ If you find this library useful, please consider:
 
 [Become a Sponsor on GitHub](https://github.com/sponsors/ysskrishna) | [Support on Patreon](https://patreon.com/ysskrishna)
 
-## Links
+## License
 
-- **Documentation**: [ysskrishna.github.io/nestedutils](https://ysskrishna.github.io/nestedutils/)
-- **PyPI**: [pypi.org/project/nestedutils](https://pypi.org/project/nestedutils/)
-- **Homepage**: [github.com/ysskrishna/nestedutils](https://github.com/ysskrishna/nestedutils)
-- **Repository**: [github.com/ysskrishna/nestedutils.git](https://github.com/ysskrishna/nestedutils.git)
-- **Issues**: [github.com/ysskrishna/nestedutils/issues](https://github.com/ysskrishna/nestedutils/issues)
+MIT License - see [LICENSE](https://github.com/ysskrishna/nestedutils/blob/main/LICENSE) file for details.
+
 
 ## Author
 
