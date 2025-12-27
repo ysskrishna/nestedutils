@@ -27,26 +27,22 @@ def get_at(data: Any, path: Union[str, List[Any]], default: Any = None) -> Any:
         PathError: If the path is malformed, empty, or contains empty keys.
     
     Examples:
-        >>> data = {"a": {"b": {"c": 5}}}
-        >>> get_at(data, "a.b.c")
-        5
+        ```python
+        data = {"a": {"b": {"c": 5}}}
+        get_at(data, "a.b.c")  # Returns: 5
         
-        >>> get_at(data, "a.b.d", default=99)
-        99
+        get_at(data, "a.b.d", default=99)  # Returns: 99
         
-        >>> data = {"items": [{"name": "apple"}, {"name": "banana"}]}
-        >>> get_at(data, "items.1.name")
-        'banana'
+        data = {"items": [{"name": "apple"}, {"name": "banana"}]}
+        get_at(data, "items.1.name")  # Returns: 'banana'
         
-        >>> get_at(data, "items.-1.name")
-        'banana'
+        get_at(data, "items.-1.name")  # Returns: 'banana'
         
-        >>> get_at(data, "items.-5.name", default="not found")
-        'not found'
+        get_at(data, "items.-5.name", default="not found")  # Returns: 'not found'
         
-        >>> data = (10, 20, 30)
-        >>> get_at(data, "-1")
-        30
+        data = (10, 20, 30)
+        get_at(data, "-1")  # Returns: 30
+        ```
     """
     keys = normalize_path(path)
     current = data
@@ -79,32 +75,21 @@ def exists_at(data: Any, path: Union[str, List[Any]]) -> bool:
         PathError: If the path is malformed, empty, or contains empty keys.
     
     Examples:
-        >>> data = {"a": {"b": {"c": 5}}}
-        >>> exists_at(data, "a.b.c")
-        True
+        ```python
+        data = {"a": {"b": {"c": 5}}}
+        exists_at(data, "a.b.c")  # Returns: True
+        exists_at(data, "a.b.d")  # Returns: False
         
-        >>> exists_at(data, "a.b.d")
-        False
+        data = {"items": [{"name": "apple"}, {"name": "banana"}]}
+        exists_at(data, "items.1.name")  # Returns: True
+        exists_at(data, "items.-1.name")  # Returns: True
+        exists_at(data, "items.-5.name")  # Returns: False
+        exists_at(data, "items.10.name")  # Returns: False
         
-        >>> data = {"items": [{"name": "apple"}, {"name": "banana"}]}
-        >>> exists_at(data, "items.1.name")
-        True
-        
-        >>> exists_at(data, "items.-1.name")
-        True
-        
-        >>> exists_at(data, "items.-5.name")
-        False
-        
-        >>> exists_at(data, "items.10.name")
-        False
-        
-        >>> data = (10, 20, 30)
-        >>> exists_at(data, "2")
-        True
-        
-        >>> exists_at(data, "5")
-        False
+        data = (10, 20, 30)
+        exists_at(data, "2")  # Returns: True
+        exists_at(data, "5")  # Returns: False
+        ```
     """
     keys = normalize_path(path)
     current = data
@@ -160,34 +145,30 @@ def set_at(
         'dict' uses {}; 'list' uses []).
     
     Examples:
-        >>> data = {}
-        >>> set_at(data, "user.profile.name", "Alice")
-        >>> data
-        {'user': {'profile': {'name': 'Alice'}}}
+        ```python
+        data = {}
+        set_at(data, "user.profile.name", "Alice")
+        # data is now: {'user': {'profile': {'name': 'Alice'}}}
         
-        >>> data = {}
-        >>> set_at(data, "items.0.name", "Item 1")
-        >>> data
-        {'items': [{'name': 'Item 1'}]}
+        data = {}
+        set_at(data, "items.0.name", "Item 1")
+        # data is now: {'items': [{'name': 'Item 1'}]}
         
-        >>> data = {}
-        >>> set_at(data, "items.5", "last", fill_strategy="none")
-        >>> data
-        {'items': [None, None, None, None, None, 'last']}
+        data = {}
+        set_at(data, "items.5", "last", fill_strategy="none")
+        # data is now: {'items': [None, None, None, None, None, 'last']}
         
-        >>> data = {}
-        >>> set_at(data, "items.2.sub.value", 42)  # 'auto' creates dict at target index, None for gaps
-        >>> data
-        {'items': [None, None, {'sub': {'value': 42}}]}
+        data = {}
+        set_at(data, "items.2.sub.value", 42)  # 'auto' creates dict at target index, None for gaps
+        # data is now: {'items': [None, None, {'sub': {'value': 42}}]}
         
-        >>> data = [1, 2, 3]
-        >>> set_at(data, "5", 99)  # extends with None gaps
-        >>> data
-        [1, 2, 3, None, None, 99]
+        data = [1, 2, 3]
+        set_at(data, "5", 99)  # extends with None gaps
+        # data is now: [1, 2, 3, None, None, 99]
         
-        >>> set_at(data, "-1", 100)  # modifies existing last element
-        >>> data
-        [1, 2, 3, None, None, 100]
+        set_at(data, "-1", 100)  # modifies existing last element
+        # data is now: [1, 2, 3, None, None, 100]
+        ```
     """
     try:
         strategy = FillStrategy(fill_strategy)
@@ -295,27 +276,21 @@ def delete_at(
             index.
     
     Examples:
-        >>> data = {"a": {"b": 1, "c": 2}}
-        >>> delete_at(data, "a.b")
-        1
-        >>> data
-        {'a': {'c': 2}}
+        ```python
+        data = {"a": {"b": 1, "c": 2}}
+        delete_at(data, "a.b")  # Returns: 1
+        # data is now: {'a': {'c': 2}}
         
-        >>> data = {"items": [1, 2, 3]}
-        >>> delete_at(data, "items.1", allow_list_mutation=True)
-        2
-        >>> data
-        {'items': [1, 3]}
+        data = {"items": [1, 2, 3]}
+        delete_at(data, "items.1", allow_list_mutation=True)  # Returns: 2
+        # data is now: {'items': [1, 3]}
         
-        >>> delete_at(data, "items.-1", allow_list_mutation=True)
-        3
-        >>> data
-        {'items': [1]}
+        delete_at(data, "items.-1", allow_list_mutation=True)  # Returns: 3
+        # data is now: {'items': [1]}
         
-        >>> delete_at(data, "items.0")  # without allow_list_mutation=True
-        Traceback (most recent call last):
-        ...
-        PathError: List deletion disabled. Set allow_list_mutation=True
+        # Without allow_list_mutation=True, list deletion raises PathError
+        delete_at(data, "items.0")  # Raises: PathError: List deletion disabled...
+        ```
     """
     keys = normalize_path(path)
     current = data

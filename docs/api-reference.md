@@ -18,11 +18,11 @@ keywords:
   - error codes
 ---
 
-## Core Functions
+<!-- ### Core Functions -->
 
 ::: nestedutils.access
     options:
-      show_root_heading: false
+      show_root_heading: true
       show_root_toc_entry: false
       members:
         - get_at
@@ -31,4 +31,32 @@ keywords:
         - exists_at
       heading_level: 3
 
+::: nestedutils.constants
+    options:
+      show_root_heading: true
+      show_source: false
+      heading_level: 3
+      members:
+        - MAX_DEPTH
+        - MAX_LIST_SIZE
+      members_order: source
+
+::: nestedutils.enums
+    options:
+      show_root_heading: true
+      show_source: false
+      heading_level: 3
+      members:
+        - PathErrorCode
+        - FillStrategy
+      members_order: source
+
+::: nestedutils.exceptions
+    options:
+      show_root_heading: true
+      show_source: false
+      heading_level: 3
+      members:
+        - PathError
+      members_order: source
 
