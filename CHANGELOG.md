@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.4]
+
+### Added
+
+- Custom MkDocs theme overrides for enhanced SEO and social media integration
+- Comprehensive meta tags including Open Graph and Twitter Card support for better link previews
+- Structured data (JSON-LD) with SoftwareApplication schema for improved search engine visibility
+- Dynamic keywords meta tag support that combines page-specific and global keywords
+
+### Changed
+
+- Fixed Open Graph image URL in documentation to use correct repository path
+- Synchronized keywords between `pyproject.toml` and `mkdocs.yml` for consistent SEO across PyPI and documentation
+- Configured MkDocs to use custom theme directory for template customization
+
 ## [1.1.3]
 
 ### Fixed
@@ -89,6 +104,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Immutable container protection (tuples cannot be modified)
 - Safe list deletion (requires explicit `allow_list_mutation=True` flag)
 
+[1.1.4]: https://github.com/ysskrishna/nestedutils/releases/tag/v1.1.4
 [1.1.3]: https://github.com/ysskrishna/nestedutils/releases/tag/v1.1.3
 [1.1.2]: https://github.com/ysskrishna/nestedutils/releases/tag/v1.1.2
 [1.1.1]: https://github.com/ysskrishna/nestedutils/releases/tag/v1.1.1
