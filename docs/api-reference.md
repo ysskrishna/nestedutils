@@ -50,6 +50,7 @@ keywords:
         - PathErrorCode
         - FillStrategy
       members_order: source
+      show_if_no_docstring: true
 
 ::: nestedutils.exceptions
     options:
