@@ -29,6 +29,7 @@ plugins:
             merge_init_into_class: true
 theme:
   name: material
+  custom_dir: docs/theme/overrides
   locale: en
   features:
     - navigation.top
@@ -45,10 +46,46 @@ markdown_extensions:
       base_path: .
 
 extra:
+  google_site_verification: "ICfb1XMVpLJZcn7JdUoaUsNZ-0D8LH1uztDuFd0VNfM"
+  og_image: https://raw.githubusercontent.com/ysskrishna/nestedutils/main/media/og.png
+  keywords:
+    - nested
+    - nested-data
+    - nested-dict
+    - json-access
+    - json-utils
+    - dot-notation
+    - dot-access
+    - path-access
+    - keypath
+    - deep-get
+    - deep-set
+    - deep-access
+    - deep-delete
+    - safe-access
+    - KeyError
+    - no-keyerror
+    - key-error-handling
+    - dictionary
+    - dict
+    - list
+    - json
+    - config
+    - dict-utils
+    - data-utils
+    - config-utils
+    - utilities
+    - utils
+    - open source
+    - API reference
+    - contribution guide
+    - changelog
+    - version history
+    - MIT license
+    - ysskrishna
   social:
     - icon: fontawesome/brands/python
       link: https://pypi.org/project/nestedutils/
-
     - icon: fontawesome/solid/external-link
       link: https://ysskrishna.vercel.app
     - icon: fontawesome/brands/github
