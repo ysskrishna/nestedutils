@@ -16,6 +16,25 @@ class TestGetBasic:
         d = {"a": {"b": {"c": 5}}}
         assert get_at(d, "a.b.c") == 5
     
+    def test_get_intermediate_nested_object(self):
+        """Get intermediate path returns complete nested object."""
+        data = {
+            "user": {
+                "profile": {
+                    "email": "john@example.com",
+                    "address": {"city": "SF", "zip": "94102"}
+                }
+            }
+        }
+        # Getting intermediate path should return complete nested structure
+        profile = get_at(data, "user.profile")
+        assert profile == {
+            "email": "john@example.com",
+            "address": {"city": "SF", "zip": "94102"}
+        }
+        # Can also get deeper values
+        assert get_at(data, "user.profile.address.city") == "SF"
+    
     def test_get_missing_returns_default(self):
         """Get missing key returns default value."""
         d = {"a": {"b": 1}}
