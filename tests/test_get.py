@@ -138,6 +138,28 @@ class TestGetPathNormalization:
         """List form allows keys with dots."""
         d = {"a.b": {"c.d": 10}}
         assert get_at(d, ["a.b", "c.d"]) == 10
+    
+    def test_complex_keys_in_list_form(self):
+        """List form handles any key type: special characters, dots, integers."""
+        # Create data structure with complex keys
+        data = {
+            "user-info": {
+                "first.name": {
+                    123: "found it!"
+                }
+            }
+        }
+        
+        # Verify each level works independently
+        assert get_at(data, ["user-info"]) == {"first.name": {123: "found it!"}}
+        assert get_at(data, ["user-info", "first.name"]) == {123: "found it!"}
+        
+        # String form cannot handle these keys (dots would be interpreted as separators)
+        # But list form works perfectly
+        assert get_at(data, ["user-info", "first.name", 123]) == "found it!"
+        
+        # Test with default for missing path
+        assert get_at(data, ["user-info", "first.name", 999], default="not found") == "not found"
 
 
 class TestGetEdgeCases:
