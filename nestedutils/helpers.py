@@ -23,7 +23,7 @@ def normalize_path(path: Union[str, List[Any]]) -> List[str]:
             or exceeds maximum depth.
     """
     if isinstance(path, list):
-        keys = [str(x) for x in path]
+        keys = [key for key in path]
     elif isinstance(path, str):
         keys = path.split(".")
     else:
