@@ -185,6 +185,28 @@ class TestGetEdgeCases:
         d = {"0": {"1": {"2": 5}}}
         assert get_at(d, "0.1.2") == 5
     
+    def test_get_dict_with_integer_vs_string_keys(self):
+        """Test that integer and string keys are correctly distinguished.
+        
+        The library correctly preserves key types in list form paths, allowing
+        access to both integer keys and string keys with the same numeric value.
+        """
+        # Dictionary with both integer key and string key
+        data = {0: "int_value", "0": "string_value"}
+        
+        # Using integer in path accesses integer key
+        assert get_at(data, [0]) == "int_value"
+        
+        # Using string in path accesses string key
+        assert get_at(data, ["0"]) == "string_value"
+        
+        # Verify direct access matches
+        assert data[0] == "int_value"
+        assert data["0"] == "string_value"
+        
+        # Both keys are distinct and accessible
+        assert get_at(data, [0]) != get_at(data, ["0"])
+    
     def test_get_mixed_types(self):
         """Get from structure with mixed types."""
         d = {
