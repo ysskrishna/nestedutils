@@ -181,6 +181,33 @@ class TestGetEdgeCases:
         d = {"a": None}
         assert get_at(d, "a") is None
     
+    def test_none_blocks_navigation(self):
+        """None as intermediate value should block navigation and return default."""
+        # None at first level blocks further navigation
+        d = {"a": None}
+        assert get_at(d, "a.b") is None
+        assert get_at(d, "a.b", default="missing") == "missing"
+        assert get_at(d, "a.b.c") is None
+        assert get_at(d, "a.b.c", default=99) == 99
+        
+        # None at deeper level also blocks navigation
+        d2 = {"a": {"b": None}}
+        assert get_at(d2, "a.b.c") is None
+        assert get_at(d2, "a.b.c", default="not found") == "not found"
+        assert get_at(d2, "a.b.c.d.e") is None
+        
+        # None in list should also block navigation
+        d3 = {"items": [None, {"name": "apple"}]}
+        assert get_at(d3, "items.0.name") is None
+        assert get_at(d3, "items.0.name", default="no name") == "no name"
+        
+        # None in nested structure
+        d4 = {"data": {"user": None, "other": {"value": 42}}}
+        assert get_at(d4, "data.user.name") is None
+        assert get_at(d4, "data.user.name", default="default") == "default"
+        # But other paths should still work
+        assert get_at(d4, "data.other.value") == 42
+    
     def test_get_false_value(self):
         """Get False value (should not be confused with missing)."""
         d = {"a": False}
