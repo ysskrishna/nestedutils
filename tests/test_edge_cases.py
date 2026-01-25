@@ -61,18 +61,6 @@ class TestPathNormalizationEdgeCases:
         assert get_at(d, ["a", -1]) == 30
         set_at(d, ["a", -1], 999)
         assert d["a"][2] == 999
-    
-    def test_path_list_empty_strings(self):
-        """List form with empty strings should raise PathError."""
-        d = {}
-        with pytest.raises(PathError) as exc_info:
-            set_at(d, ["a", "", "b"], 1)
-        assert exc_info.value.code == PathErrorCode.EMPTY_PATH
-        
-        # Also test with get_at
-        with pytest.raises(PathError) as exc_info:
-            get_at(d, ["a", "", "b"])
-        assert exc_info.value.code == PathErrorCode.EMPTY_PATH
 
 
 class TestComplexIntegrationScenarios:

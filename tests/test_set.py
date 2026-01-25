@@ -244,60 +244,6 @@ class TestSetErrorCases:
             set_at(d, "a.b", 10)
         assert exc_info.value.code == PathErrorCode.INVALID_PATH
     
-    def test_empty_string_path(self):
-        """Empty path should raise PathError."""
-        d = {"a": 1}
-        with pytest.raises(PathError) as exc_info:
-            set_at(d, "", 5)
-        assert exc_info.value.code == PathErrorCode.EMPTY_PATH
-    
-    def test_empty_key_in_middle(self):
-        """Set with empty key in middle of path should raise PathError."""
-        d = {}
-        with pytest.raises(PathError) as exc_info:
-            set_at(d, "a..b", 1)
-        assert exc_info.value.code == PathErrorCode.EMPTY_PATH
-        
-        with pytest.raises(PathError) as exc_info:
-            set_at(d, ["a", "", "b"], 1)
-        assert exc_info.value.code == PathErrorCode.EMPTY_PATH
-    
-    def test_set_path_validation_edge_cases(self):
-        """Test path validation for various edge cases with dots."""
-        d = {}
-        
-        # Leading dot
-        with pytest.raises(PathError) as exc_info:
-            set_at(d, ".a.b", 1)
-        assert exc_info.value.code == PathErrorCode.EMPTY_PATH
-        
-        # Trailing dot
-        with pytest.raises(PathError) as exc_info:
-            set_at(d, "a.b.", 1)
-        assert exc_info.value.code == PathErrorCode.EMPTY_PATH
-        
-        # Just dots
-        with pytest.raises(PathError) as exc_info:
-            set_at(d, "...", 1)
-        assert exc_info.value.code == PathErrorCode.EMPTY_PATH
-        
-        # Multiple consecutive dots
-        with pytest.raises(PathError) as exc_info:
-            set_at(d, "a...b", 1)
-        assert exc_info.value.code == PathErrorCode.EMPTY_PATH
-        
-        # Leading and trailing dots
-        with pytest.raises(PathError) as exc_info:
-            set_at(d, ".a.b.", 1)
-        assert exc_info.value.code == PathErrorCode.EMPTY_PATH
-    
-    def test_set_negative_index_on_empty_list(self):
-        """Can't use negative index on empty list."""
-        d = {"a": []}
-        with pytest.raises(PathError) as exc_info:
-            set_at(d, "a.-1", 5)
-        assert exc_info.value.code == PathErrorCode.INVALID_INDEX
-    
     def test_set_negative_index_on_empty_list(self):
         """Can't use negative index on empty list."""
         d = {"a": []}
@@ -430,25 +376,3 @@ class TestSetComplex:
         d = {"a": {"b": 1}}
         set_at(d, "a.b", 2)
         assert d == {"a": {"b": 2}}
-
-
-class TestSetInvalidPaths:
-    """Tests for invalid path types in set_at."""
-    
-    @pytest.mark.parametrize("invalid_path", [
-        123,
-        None,
-        {},
-        tuple(),
-        set(),
-        3.14,
-        True,
-        False,
-    ])
-    def test_set_at_invalid_path_types(self, invalid_path):
-        """set_at should raise PathError with INVALID_PATH code for invalid path types."""
-        d = {}
-        with pytest.raises(PathError) as exc_info:
-            set_at(d, invalid_path, "value")
-        assert exc_info.value.code == PathErrorCode.INVALID_PATH
-

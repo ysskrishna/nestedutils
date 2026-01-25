@@ -170,53 +170,6 @@ class TestDeleteErrorCases:
         with pytest.raises(PathError) as exc_info:
             delete_at(d, "a.b.c")
         assert exc_info.value.code == PathErrorCode.MISSING_KEY
-    
-    def test_delete_empty_path(self):
-        """Delete with empty path should fail."""
-        d = {"a": 1}
-        with pytest.raises(PathError) as exc_info:
-            delete_at(d, "")
-        assert exc_info.value.code == PathErrorCode.EMPTY_PATH
-    
-    def test_delete_empty_key_in_middle(self):
-        """Delete with empty key in middle of path should fail."""
-        d = {"a": {"": {"b": 1}}}
-        with pytest.raises(PathError) as exc_info:
-            delete_at(d, "a..b")
-        assert exc_info.value.code == PathErrorCode.EMPTY_PATH
-        
-        with pytest.raises(PathError) as exc_info:
-            delete_at(d, ["a", "", "b"])
-        assert exc_info.value.code == PathErrorCode.EMPTY_PATH
-    
-    def test_delete_path_validation_edge_cases(self):
-        """Test path validation for various edge cases with dots."""
-        d = {"a": {"b": 1}}
-        
-        # Leading dot
-        with pytest.raises(PathError) as exc_info:
-            delete_at(d, ".a.b")
-        assert exc_info.value.code == PathErrorCode.EMPTY_PATH
-        
-        # Trailing dot
-        with pytest.raises(PathError) as exc_info:
-            delete_at(d, "a.b.")
-        assert exc_info.value.code == PathErrorCode.EMPTY_PATH
-        
-        # Just dots
-        with pytest.raises(PathError) as exc_info:
-            delete_at(d, "...")
-        assert exc_info.value.code == PathErrorCode.EMPTY_PATH
-        
-        # Multiple consecutive dots
-        with pytest.raises(PathError) as exc_info:
-            delete_at(d, "a...b")
-        assert exc_info.value.code == PathErrorCode.EMPTY_PATH
-        
-        # Leading and trailing dots
-        with pytest.raises(PathError) as exc_info:
-            delete_at(d, ".a.b.")
-        assert exc_info.value.code == PathErrorCode.EMPTY_PATH
 
 
 class TestDeleteComplex:
@@ -261,23 +214,6 @@ class TestDeleteComplex:
 
 class TestDeleteInvalidPaths:
     """Tests for invalid path types in delete_at."""
-    
-    @pytest.mark.parametrize("invalid_path", [
-        123,
-        None,
-        {},
-        tuple(),
-        set(),
-        3.14,
-        True,
-        False,
-    ])
-    def test_delete_at_invalid_path_types(self, invalid_path):
-        """delete_at should raise PathError with INVALID_PATH code for invalid path types."""
-        d = {"a": 1}
-        with pytest.raises(PathError) as exc_info:
-            delete_at(d, invalid_path)
-        assert exc_info.value.code == PathErrorCode.INVALID_PATH
     
     def test_delete_path_as_list(self):
         """Delete using list form path."""

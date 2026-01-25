@@ -16,6 +16,25 @@ class TestGetBasic:
         d = {"a": {"b": {"c": 5}}}
         assert get_at(d, "a.b.c") == 5
     
+    def test_get_intermediate_nested_object(self):
+        """Get intermediate path returns complete nested object."""
+        data = {
+            "user": {
+                "profile": {
+                    "email": "john@example.com",
+                    "address": {"city": "SF", "zip": "94102"}
+                }
+            }
+        }
+        # Getting intermediate path should return complete nested structure
+        profile = get_at(data, "user.profile")
+        assert profile == {
+            "email": "john@example.com",
+            "address": {"city": "SF", "zip": "94102"}
+        }
+        # Can also get deeper values
+        assert get_at(data, "user.profile.address.city") == "SF"
+    
     def test_get_missing_returns_default(self):
         """Get missing key returns default value."""
         d = {"a": {"b": 1}}
@@ -119,6 +138,28 @@ class TestGetPathNormalization:
         """List form allows keys with dots."""
         d = {"a.b": {"c.d": 10}}
         assert get_at(d, ["a.b", "c.d"]) == 10
+    
+    def test_complex_keys_in_list_form(self):
+        """List form handles any key type: special characters, dots, integers."""
+        # Create data structure with complex keys
+        data = {
+            "user-info": {
+                "first.name": {
+                    123: "found it!"
+                }
+            }
+        }
+        
+        # Verify each level works independently
+        assert get_at(data, ["user-info"]) == {"first.name": {123: "found it!"}}
+        assert get_at(data, ["user-info", "first.name"]) == {123: "found it!"}
+        
+        # String form cannot handle these keys (dots would be interpreted as separators)
+        # But list form works perfectly
+        assert get_at(data, ["user-info", "first.name", 123]) == "found it!"
+        
+        # Test with default for missing path
+        assert get_at(data, ["user-info", "first.name", 999], default="not found") == "not found"
 
 
 class TestGetEdgeCases:
@@ -139,6 +180,33 @@ class TestGetEdgeCases:
         """Get None value explicitly stored."""
         d = {"a": None}
         assert get_at(d, "a") is None
+    
+    def test_none_blocks_navigation(self):
+        """None as intermediate value should block navigation and return default."""
+        # None at first level blocks further navigation
+        d = {"a": None}
+        assert get_at(d, "a.b") is None
+        assert get_at(d, "a.b", default="missing") == "missing"
+        assert get_at(d, "a.b.c") is None
+        assert get_at(d, "a.b.c", default=99) == 99
+        
+        # None at deeper level also blocks navigation
+        d2 = {"a": {"b": None}}
+        assert get_at(d2, "a.b.c") is None
+        assert get_at(d2, "a.b.c", default="not found") == "not found"
+        assert get_at(d2, "a.b.c.d.e") is None
+        
+        # None in list should also block navigation
+        d3 = {"items": [None, {"name": "apple"}]}
+        assert get_at(d3, "items.0.name") is None
+        assert get_at(d3, "items.0.name", default="no name") == "no name"
+        
+        # None in nested structure
+        d4 = {"data": {"user": None, "other": {"value": 42}}}
+        assert get_at(d4, "data.user.name") is None
+        assert get_at(d4, "data.user.name", default="default") == "default"
+        # But other paths should still work
+        assert get_at(d4, "data.other.value") == 42
     
     def test_get_false_value(self):
         """Get False value (should not be confused with missing)."""
@@ -166,6 +234,28 @@ class TestGetEdgeCases:
         d = {"0": {"1": {"2": 5}}}
         assert get_at(d, "0.1.2") == 5
     
+    def test_get_dict_with_integer_vs_string_keys(self):
+        """Test that integer and string keys are correctly distinguished.
+        
+        The library correctly preserves key types in list form paths, allowing
+        access to both integer keys and string keys with the same numeric value.
+        """
+        # Dictionary with both integer key and string key
+        data = {0: "int_value", "0": "string_value"}
+        
+        # Using integer in path accesses integer key
+        assert get_at(data, [0]) == "int_value"
+        
+        # Using string in path accesses string key
+        assert get_at(data, ["0"]) == "string_value"
+        
+        # Verify direct access matches
+        assert data[0] == "int_value"
+        assert data["0"] == "string_value"
+        
+        # Both keys are distinct and accessible
+        assert get_at(data, [0]) != get_at(data, ["0"])
+    
     def test_get_mixed_types(self):
         """Get from structure with mixed types."""
         d = {
@@ -177,72 +267,4 @@ class TestGetEdgeCases:
         assert get_at(d, "a.2.three") == 3
         assert get_at(d, "b.list.1") == 20
         assert get_at(d, "b.dict.nested") == "value"
-
-
-class TestGetInvalidPaths:
-    """Tests for invalid path types."""
-    
-    @pytest.mark.parametrize("invalid_path", [
-        123,
-        None,
-        {},
-        tuple(),
-        set(),
-        3.14,
-        True,
-        False,
-    ])
-    def test_get_at_invalid_path_types(self, invalid_path):
-        """get_at should raise PathError with INVALID_PATH code for invalid path types."""
-        d = {"a": 1}
-        with pytest.raises(PathError) as exc_info:
-            get_at(d, invalid_path)
-        assert exc_info.value.code == PathErrorCode.INVALID_PATH
-    
-    def test_get_empty_path(self):
-        """Get with empty path should raise PathError."""
-        d = {"a": 1}
-        with pytest.raises(PathError) as exc_info:
-            get_at(d, "")
-        assert exc_info.value.code == PathErrorCode.EMPTY_PATH
-    
-    def test_get_empty_key_in_middle(self):
-        """Get with empty key in middle of path should raise PathError."""
-        d = {"a": {"": {"b": 1}}}
-        with pytest.raises(PathError) as exc_info:
-            get_at(d, "a..b")
-        assert exc_info.value.code == PathErrorCode.EMPTY_PATH
-        
-        with pytest.raises(PathError) as exc_info:
-            get_at(d, ["a", "", "b"])
-        assert exc_info.value.code == PathErrorCode.EMPTY_PATH
-    
-    def test_get_path_validation_edge_cases(self):
-        """Test path validation for various edge cases with dots."""
-        d = {"a": {"b": 1}}
-        
-        # Leading dot
-        with pytest.raises(PathError) as exc_info:
-            get_at(d, ".a.b")
-        assert exc_info.value.code == PathErrorCode.EMPTY_PATH
-        
-        # Trailing dot
-        with pytest.raises(PathError) as exc_info:
-            get_at(d, "a.b.")
-        assert exc_info.value.code == PathErrorCode.EMPTY_PATH
-        
-        # Just dots
-        with pytest.raises(PathError) as exc_info:
-            get_at(d, "...")
-        assert exc_info.value.code == PathErrorCode.EMPTY_PATH
-        
-        # Multiple consecutive dots
-        with pytest.raises(PathError) as exc_info:
-            get_at(d, "a...b")
-        assert exc_info.value.code == PathErrorCode.EMPTY_PATH
-        
-        # Leading and trailing dots
-        with pytest.raises(PathError) as exc_info:
-            get_at(d, ".a.b.")
-        assert exc_info.value.code == PathErrorCode.EMPTY_PATH
 

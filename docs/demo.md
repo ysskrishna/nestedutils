@@ -29,22 +29,38 @@ Try the `nestedutils` library directly in your browser! This page uses [Pyodide]
 
 <div id="test-interface" style="display: none;">
   <div class="test-section">
-    <h3>Current Data Structure</h3>
-    <p style="color: #666; font-size: 0.9em; margin-bottom: 10px;">This is your working data structure. All operations will modify this structure.</p>
-    <div id="data-display" style="padding: 15px; background: #f5f5f5; border-radius: 4px; font-family: monospace; white-space: pre-wrap; max-height: 300px; overflow-y: auto; border: 1px solid #e0e0e0;"></div>
-    <div style="margin-top: 10px; display: flex; gap: 10px;">
-      <button 
-        id="reset-btn" 
-        style="padding: 8px 16px; background: #757575; color: white; border: none; border-radius: 4px; cursor: pointer;"
-      >
-        Reset to Empty
-      </button>
-      <button 
-        id="load-example-btn" 
-        style="padding: 8px 16px; background: #1976d2; color: white; border: none; border-radius: 4px; cursor: pointer;"
-      >
-        Load Example Data
-      </button>
+    <h3>Data Source</h3>
+    <p style="color: #666; font-size: 0.9em; margin-bottom: 15px;">Select an example or edit the JSON directly. Valid JSON is automatically applied when you stop typing.</p>
+    
+    <!-- Horizontal Radio Buttons -->
+    <div style="display: flex; gap: 20px; margin-bottom: 20px; flex-wrap: wrap; align-items: center;">
+      <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; padding: 6px 0;" onmouseover="this.style.opacity='0.7'" onmouseout="this.style.opacity='1'">
+        <input type="radio" name="data-source" value="example1" id="radio-example1" style="cursor: pointer;" />
+        <span>Example 1: User Profile</span>
+      </label>
+      <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; padding: 6px 0;" onmouseover="this.style.opacity='0.7'" onmouseout="this.style.opacity='1'">
+        <input type="radio" name="data-source" value="example2" id="radio-example2" style="cursor: pointer;" />
+        <span>Example 2: E-commerce Data</span>
+      </label>
+      <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; padding: 6px 0;" onmouseover="this.style.opacity='0.7'" onmouseout="this.style.opacity='1'">
+        <input type="radio" name="data-source" value="example3" id="radio-example3" style="cursor: pointer;" />
+        <span>Example 3: API Response</span>
+      </label>
+      <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; padding: 6px 0;" onmouseover="this.style.opacity='0.7'" onmouseout="this.style.opacity='1'">
+        <input type="radio" name="data-source" value="custom" id="radio-custom" style="cursor: pointer;" />
+        <span>Custom JSON</span>
+      </label>
+    </div>
+    
+    <!-- JSON Textarea -->
+    <div style="position: relative;">
+      <div id="json-status" style="position: absolute; top: 10px; right: 10px; font-size: 0.85em; font-weight: 500; z-index: 1;"></div>
+      <textarea 
+        id="custom-json-input" 
+        placeholder='Enter valid JSON here, e.g., {"key": "value"}'
+        style="width: 100%; min-height: 300px; padding: 12px; border: 1px solid #ccc; border-radius: 4px; font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace; font-size: 0.9em; resize: vertical; line-height: 1.5; tab-size: 2;"
+      ></textarea>
+      <div id="json-error" style="margin-top: 8px; font-size: 0.85em; min-height: 20px; font-family: monospace;"></div>
     </div>
   </div>
 
@@ -216,9 +232,28 @@ Try the `nestedutils` library directly in your browser! This page uses [Pyodide]
     cursor: pointer;
   }
   
-  select:focus, input:focus {
+  select:focus, input:focus, textarea:focus {
     outline: 2px solid #1976d2;
     outline-offset: 2px;
+  }
+  
+  #json-error {
+    font-family: monospace;
+    font-size: 0.85em;
+  }
+  
+  #json-status {
+    font-weight: 500;
+  }
+  
+  textarea {
+    line-height: 1.5;
+  }
+  
+  @media (max-width: 768px) {
+    .test-section > div[style*="display: flex"] {
+      flex-direction: column !important;
+    }
   }
 </style>
 
@@ -226,6 +261,8 @@ Try the `nestedutils` library directly in your browser! This page uses [Pyodide]
 
 <script type="text/javascript">
   let pyodide;
+  let appliedJsonString = ""; // Track the currently applied JSON
+  let autoApplyTimer = null; // Debounce timer for auto-apply
 
   async function main() {
     // Load Pyodide
@@ -270,7 +307,22 @@ Try the `nestedutils` library directly in your browser! This page uses [Pyodide]
     }
     
     // Initialize data structure display
-    updateDataDisplay();
+    updateDataDisplay(true); // Sync textarea on initial load
+    
+    // Set initial radio button state
+    document.getElementById("radio-custom").checked = true;
+    
+    // Initialize applied state
+    const initialJson = document.getElementById("custom-json-input").value.trim();
+    if (initialJson) {
+      try {
+        appliedJsonString = JSON.stringify(JSON.parse(initialJson));
+      } catch (e) {
+        appliedJsonString = "";
+      }
+    } else {
+      appliedJsonString = "{}";
+    }
     
     // Hide loading, show interface
     document.getElementById("pyodide-loading").style.display = "none";
@@ -280,47 +332,324 @@ Try the `nestedutils` library directly in your browser! This page uses [Pyodide]
     setupEventListeners();
   }
 
-  function updateDataDisplay() {
+  function updateDataDisplay(syncTextarea = false) {
+    // Sync JSON editor with current data structure when loading examples
+    if (syncTextarea) {
+      try {
+        const json = pyodide.runPython(`json.dumps(data, indent=2)`);
+        const jsonStr = json || "{}";
+        const customInput = document.getElementById("custom-json-input");
+        customInput.value = jsonStr;
+        // Update applied state to match current data
+        appliedJsonString = JSON.stringify(JSON.parse(jsonStr));
+        // Clear any error messages and update status
+        document.getElementById("json-error").textContent = "";
+        updateJsonStatus(true);
+      } catch (error) {
+        console.error("Error updating display:", error);
+      }
+    }
+  }
+  
+  // Check if there are unsaved changes (for auto-apply)
+  function hasUnsavedChanges() {
+    const jsonInput = document.getElementById("custom-json-input").value.trim();
+    
+    // Handle empty input
+    if (!jsonInput) {
+      // Empty input matches empty applied state or {}
+      return appliedJsonString !== "" && appliedJsonString !== "{}";
+    }
+    
+    // Handle empty object/array strings
+    if (jsonInput === "{}" || jsonInput === "[]") {
+      const normalized = jsonInput;
+      return normalized !== appliedJsonString;
+    }
+    
     try {
-      const json = pyodide.runPython(`json.dumps(data, indent=2)`);
-      document.getElementById("data-display").textContent = json || "{}";
+      // Normalize both for comparison (handles formatting differences)
+      const normalized = JSON.stringify(JSON.parse(jsonInput));
+      // Compare normalized strings
+      return normalized !== appliedJsonString;
+    } catch {
+      // If invalid JSON, consider it as having changes
+      return true;
+    }
+  }
+  
+  // Apply JSON function (auto-apply only)
+  function applyJsonData() {
+    const jsonInput = document.getElementById("custom-json-input").value.trim();
+    const errorDiv = document.getElementById("json-error");
+    
+    if (!jsonInput) {
+      updateJsonStatus(false, "Please enter JSON data");
+      errorDiv.textContent = "Please enter JSON data";
+      errorDiv.style.color = "#c62828";
+      return;
+    }
+    
+    // Validate JSON
+    let parsedData;
+    try {
+      parsedData = JSON.parse(jsonInput);
     } catch (error) {
-      document.getElementById("data-display").textContent = "Error displaying data";
+      updateJsonStatus(false, "Invalid JSON");
+      errorDiv.textContent = `Invalid JSON: ${error.message}`;
+      errorDiv.style.color = "#c62828";
+      return;
+    }
+    
+    // Validate that it's an object or array (not primitive)
+    if (typeof parsedData !== "object" || parsedData === null) {
+      updateJsonStatus(false, "Must be object or array");
+      errorDiv.textContent = "JSON must be an object {} or array []";
+      errorDiv.style.color = "#c62828";
+      return;
+    }
+    
+    // Set the data in Python
+    try {
+      const jsonStr = JSON.stringify(parsedData);
+      pyodide.runPython(`data = json.loads(${JSON.stringify(jsonStr)})`);
+      appliedJsonString = jsonStr; // Update applied state
+      clearResults();
+      updateJsonStatus(true, "✓ Applied");
+      errorDiv.textContent = "";
+      document.getElementById("radio-custom").checked = true;
+    } catch (error) {
+      updateJsonStatus(false, "Error applying");
+      errorDiv.textContent = `Error setting data: ${error.message}`;
+      errorDiv.style.color = "#c62828";
     }
   }
 
   function setupEventListeners() {
-    // Reset data
-    document.getElementById("reset-btn").addEventListener("click", () => {
-      pyodide.runPython(`data = {}`);
-      updateDataDisplay();
-      clearResults();
+    // Note: Removed "Reset to Empty" button - users can just clear the JSON editor or set it to {}
+    
+    // Radio button change handlers
+    const radioButtons = document.querySelectorAll('input[name="data-source"]');
+    radioButtons.forEach(radio => {
+      radio.addEventListener("change", (e) => {
+        const value = e.target.value;
+        if (value === "custom") {
+          // Don't auto-load, just switch to custom mode
+          return;
+        }
+        loadExampleData(value);
+      });
     });
     
-    // Load example data
-    document.getElementById("load-example-btn").addEventListener("click", () => {
-      pyodide.runPython(`
+    // Load example data function
+    function loadExampleData(exampleType) {
+      let exampleCode = "";
+      
+      switch(exampleType) {
+        case "example1":
+          // Example 1: User Profile
+          exampleCode = `
         data = {
           "user": {
             "name": "John Doe",
             "age": 30,
             "profile": {
               "email": "john@example.com",
-              "bio": "Software developer"
+                  "bio": "Software developer",
+                  "address": {
+                    "street": "123 Main St",
+                    "city": "San Francisco",
+                    "zip": "94102"
+                  }
+                },
+                "preferences": {
+                  "theme": "dark",
+                  "notifications": True,
+                  "language": "en"
             }
           },
           "items": [
             {"id": 1, "title": "First Item", "tags": ["python", "demo"]},
             {"id": 2, "title": "Second Item", "tags": ["javascript"]}
-          ],
-          "settings": {
-            "theme": "dark",
-            "notifications": True
+              ]
+            }
+          `;
+          break;
+        case "example2":
+          // Example 2: E-commerce Data
+          exampleCode = `
+            data = {
+              "store": {
+                "name": "TechShop",
+                "location": "New York"
+              },
+              "products": [
+                {
+                  "id": 101,
+                  "name": "Laptop",
+                  "price": 999.99,
+                  "inventory": {
+                    "stock": 45,
+                    "warehouse": "A1"
+                  },
+                  "reviews": [
+                    {"rating": 5, "comment": "Great product!"},
+                    {"rating": 4, "comment": "Good value"}
+                  ]
+                },
+                {
+                  "id": 102,
+                  "name": "Mouse",
+                  "price": 29.99,
+                  "inventory": {
+                    "stock": 120,
+                    "warehouse": "B2"
+                  },
+                  "reviews": []
+                }
+              ],
+              "orders": [
+                {
+                  "order_id": "ORD-001",
+                  "customer": "Alice",
+                  "items": ["101", "102"],
+                  "total": 1029.98
+                }
+              ]
+            }
+          `;
+          break;
+        case "example3":
+          // Example 3: API Response
+          exampleCode = `
+            data = {
+              "status": "success",
+              "data": {
+                "users": [
+                  {
+                    "id": 1,
+                    "username": "alice",
+                    "metadata": {
+                      "created_at": "2024-01-15",
+                      "last_login": "2024-12-01"
+                    },
+                    "roles": ["admin", "user"]
+                  },
+                  {
+                    "id": 2,
+                    "username": "bob",
+                    "metadata": {
+                      "created_at": "2024-02-20",
+                      "last_login": None
+                    },
+                    "roles": ["user"]
+                  }
+                ],
+                "pagination": {
+                  "page": 1,
+                  "per_page": 10,
+                  "total": 2
+                }
+              },
+              "errors": []
+            }
+          `;
+          break;
+      }
+      
+      if (exampleCode) {
+        pyodide.runPython(exampleCode);
+        updateDataDisplay(true); // Sync textarea when loading examples
+        clearResults();
+        updateJsonStatus(true, "✓ Example loaded");
+        // Check the corresponding radio button
+        document.getElementById(`radio-${exampleType}`).checked = true;
+        // Update applied state to match loaded example
+        const jsonInput = document.getElementById("custom-json-input").value.trim();
+        if (jsonInput) {
+          try {
+            appliedJsonString = JSON.stringify(JSON.parse(jsonInput));
+          } catch (e) {
+            appliedJsonString = "";
           }
         }
-      `);
-      updateDataDisplay();
-      clearResults();
+      }
+    }
+    
+    // Update JSON status indicator
+    function updateJsonStatus(isValid, message = null) {
+      const statusDiv = document.getElementById("json-status");
+      const errorDiv = document.getElementById("json-error");
+      
+      if (message !== null) {
+        statusDiv.textContent = message;
+        statusDiv.style.color = isValid ? "#2e7d32" : "#c62828";
+      } else if (isValid === true) {
+        statusDiv.textContent = "✓ Valid JSON";
+        statusDiv.style.color = "#2e7d32";
+        errorDiv.textContent = "";
+      } else if (isValid === false) {
+        statusDiv.textContent = "✗ Invalid JSON";
+        statusDiv.style.color = "#c62828";
+      } else {
+        // Clear status
+        statusDiv.textContent = "";
+        errorDiv.textContent = "";
+      }
+    }
+    
+    // Real-time JSON validation and auto-apply on input
+    document.getElementById("custom-json-input").addEventListener("input", () => {
+      const jsonInput = document.getElementById("custom-json-input").value.trim();
+      const errorDiv = document.getElementById("json-error");
+      
+      // Switch to custom mode when user starts editing
+      if (jsonInput) {
+        document.getElementById("radio-custom").checked = true;
+      }
+      
+      // Clear any existing auto-apply timer
+      if (autoApplyTimer) {
+        clearTimeout(autoApplyTimer);
+        autoApplyTimer = null;
+      }
+      
+      if (!jsonInput) {
+        updateJsonStatus(null);
+        errorDiv.textContent = "";
+        return;
+      }
+      
+      // Validate JSON
+      let isValid = false;
+      try {
+        const parsed = JSON.parse(jsonInput);
+        if (typeof parsed !== "object" || parsed === null) {
+          updateJsonStatus(false);
+          errorDiv.textContent = "JSON must be an object {} or array []";
+          errorDiv.style.color = "#c62828";
+          isValid = false;
+        } else {
+          updateJsonStatus(true);
+          errorDiv.textContent = "";
+          isValid = true;
+        }
+      } catch (error) {
+        updateJsonStatus(false);
+        errorDiv.textContent = `Invalid JSON: ${error.message}`;
+        errorDiv.style.color = "#c62828";
+        isValid = false;
+      }
+      
+      // Auto-apply valid JSON after user stops typing (1 second delay)
+      if (isValid) {
+        autoApplyTimer = setTimeout(() => {
+          // Only auto-apply if JSON is still valid and different from applied
+          if (hasUnsavedChanges()) {
+            applyJsonData();
+          }
+        }, 1000); // 1 second debounce
+      }
     });
     
     // Get value
@@ -410,7 +739,7 @@ Try the `nestedutils` library directly in your browser! This page uses [Pyodide]
         }
         
         pyodide.runPython(`set_at(data, ${JSON.stringify(path)}, ${JSON.stringify(parsedValue)}, fill_strategy=${JSON.stringify(strategy)})`);
-        updateDataDisplay();
+        updateDataDisplay(true);
         resultDiv.innerHTML = `<span class="result-success">✓ Value set successfully</span>`;
       } catch (error) {
         resultDiv.innerHTML = `<span class="result-error">Error: ${escapeHtml(error.message)}</span>`;
@@ -454,8 +783,8 @@ Try the `nestedutils` library directly in your browser! This page uses [Pyodide]
       
       try {
         resultDiv.innerHTML = '<span class="result-info">Processing...</span>';
-        const deleted = pyodide.runPython(`delete_at(data, ${JSON.stringify(path)}, allow_list_mutation=${allowListMutation})`);
-        updateDataDisplay();
+        const deleted = pyodide.runPython(`delete_at(data, ${JSON.stringify(path)}, allow_list_mutation=${allowListMutation ? 'True' : 'False'})`);
+        updateDataDisplay(true);
         
         // Format the deleted value for display
         let deletedStr;
