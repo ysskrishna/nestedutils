@@ -7,9 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.1.7]
 
-### Changed
+### Added
 
-- Improved demo page user experience with enhanced examples and better error handling
+- JSON textarea editor in demo page replacing read-only data display
+- Radio button selection for three example datasets (User Profile, E-commerce Data, API Response) and custom JSON input
+- Consolidated path validation tests into `test_normalize_path.py` with new test cases for complex keys and None value handling
+
+
+### Fixed
+
+- Fixed `normalize_path()` converting all list path keys to strings, now preserves integer and other key types.
 
 ## [1.1.6]
 

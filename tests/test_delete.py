@@ -170,9 +170,6 @@ class TestDeleteErrorCases:
         with pytest.raises(PathError) as exc_info:
             delete_at(d, "a.b.c")
         assert exc_info.value.code == PathErrorCode.MISSING_KEY
-    
-    # Note: Path validation (empty paths, empty keys, edge cases) is now
-    # comprehensively tested in test_normalize_path.py
 
 
 class TestDeleteComplex:
