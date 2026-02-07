@@ -251,3 +251,394 @@ def create_intermediate_container(next_key: Union[str, int]) -> Union[dict, list
         []
     """
     return [] if is_int_key(next_key) else {}
+
+
+# Navigation helpers for access.py
+
+MISSING = object()
+
+
+def navigate_dict_key(
+    current: dict,
+    key: Union[str, int],
+    *,
+    default: Any = MISSING,
+    raise_on_missing: bool = True
+) -> Any:
+    """Navigate into a dictionary using a key.
+    
+    Args:
+        current: The dictionary to navigate into.
+        key: The key to access.
+        default: Value to return if key is missing (when not MISSING).
+        raise_on_missing: Whether to raise PathError on missing key.
+    
+    Returns:
+        The value at the key, or default if provided and key is missing.
+    
+    Raises:
+        PathError: If key is missing and raise_on_missing is True and default is MISSING.
+    """
+    if key not in current:
+        if default is not MISSING:
+            return default
+        if raise_on_missing:
+            raise PathError(
+                f"Key '{key}' not found",
+                PathErrorCode.MISSING_KEY
+            )
+        return None
+    return current[key]
+
+
+def navigate_sequence_index(
+    current: Union[list, tuple],
+    key: Union[str, int],
+    *,
+    default: Any = MISSING,
+    raise_on_missing: bool = True
+) -> Any:
+    """Navigate into a list or tuple using an index.
+    
+    Args:
+        current: The list or tuple to navigate into.
+        key: The index to access.
+        default: Value to return if index is out of bounds (when not MISSING).
+        raise_on_missing: Whether to raise PathError on out-of-bounds index.
+    
+    Returns:
+        The value at the index, or default if provided and index is out of bounds.
+    
+    Raises:
+        PathError: If key is not a valid integer, or index is out of bounds and
+            raise_on_missing is True and default is MISSING.
+    """
+    if not is_int_key(key):
+        if default is not MISSING:
+            return default
+        if raise_on_missing:
+            raise PathError(
+                f"Expected numeric index, got '{key}'",
+                PathErrorCode.INVALID_INDEX
+            )
+        return None
+    
+    idx = resolve_read_index(current, key)
+    if idx is None:
+        if default is not MISSING:
+            return default
+        if raise_on_missing:
+            raise PathError(
+                f"Index '{key}' out of bounds in path",
+                PathErrorCode.INVALID_INDEX
+            )
+        return None
+    
+    return current[idx]
+
+
+def navigate_one_step(
+    current: Any,
+    key: Union[str, int],
+    *,
+    default: Any = MISSING,
+    raise_on_missing: bool = True
+) -> Any:
+    """Navigate one step into a nested structure.
+    
+    Handles dict, list, tuple, and other types.
+    
+    Args:
+        current: The current value in the nested structure.
+        key: The key or index to navigate with.
+        default: Value to return if navigation fails (when not MISSING).
+        raise_on_missing: Whether to raise PathError on navigation failure.
+    
+    Returns:
+        The next value in the navigation path, or default if provided and navigation fails.
+    
+    Raises:
+        PathError: If navigation fails and raise_on_missing is True and default is MISSING.
+    """
+    if isinstance(current, dict):
+        return navigate_dict_key(current, key, default=default, raise_on_missing=raise_on_missing)
+    
+    elif isinstance(current, (list, tuple)):
+        return navigate_sequence_index(current, key, default=default, raise_on_missing=raise_on_missing)
+    
+    else:
+        if default is not MISSING:
+            return default
+        if raise_on_missing:
+            raise PathError(
+                f"Cannot navigate into {type(current).__name__} at '{key}'",
+                PathErrorCode.NON_NAVIGABLE_TYPE
+            )
+        return None
+
+
+def navigate_to_parent(
+    data: Any,
+    intermediate_keys: List[Union[str, int]],
+    final_key: Union[str, int],
+    *,
+    create: bool = False
+) -> Any:
+    """Navigate to the parent container of the final key.
+    
+    For intermediate keys, creates containers if create=True. When create=True,
+    this function will also replace None values with appropriate containers (dict
+    or list) based on the next key type, allowing navigation through None values.
+    
+    Args:
+        data: The root data structure.
+        intermediate_keys: List of intermediate keys to navigate through.
+        final_key: The final key (used to determine container type for last intermediate).
+        create: If True, automatically create missing intermediate containers and
+            replace None values with containers.
+    
+    Returns:
+        The parent container of the final key.
+    
+    Raises:
+        PathError: If path doesn't exist and create=False, or if attempting
+            to modify tuple, or other navigation errors.
+    """
+    current = data
+    
+    # Navigate intermediate keys
+    for i, key in enumerate(intermediate_keys):
+        next_key = intermediate_keys[i + 1] if i + 1 < len(intermediate_keys) else final_key
+        
+        if isinstance(current, dict):
+            if key not in current:
+                if not create:
+                    raise PathError(
+                        f"Key '{key}' does not exist. Use create=True to auto-create path.",
+                        PathErrorCode.MISSING_KEY
+                    )
+                # Create intermediate container based on next key type
+                current[key] = create_intermediate_container(next_key)
+            elif current[key] is None:
+                if not create:
+                    raise PathError(
+                        f"Key '{key}' is None. Use create=True to replace with container.",
+                        PathErrorCode.MISSING_KEY
+                    )
+                current[key] = create_intermediate_container(next_key)
+            
+            current = current[key]
+        
+        elif isinstance(current, list):
+            if not is_int_key(key):
+                raise PathError(
+                    f"Expected numeric index for list, got '{key}'",
+                    PathErrorCode.INVALID_INDEX
+                )
+            
+            idx = resolve_write_index(current, key)
+            
+            # Extend list if needed (only for append, not gaps)
+            if idx == len(current):
+                if not create:
+                    raise PathError(
+                        f"Index {idx} does not exist. Use create=True to append.",
+                        PathErrorCode.INVALID_INDEX
+                    )
+                current.append(create_intermediate_container(next_key))
+            elif current[idx] is None:
+                if not create:
+                    raise PathError(
+                        f"Index {idx} is None. Use create=True to replace with container.",
+                        PathErrorCode.MISSING_KEY
+                    )
+                current[idx] = create_intermediate_container(next_key)
+            
+            current = current[idx]
+        
+        elif isinstance(current, tuple):
+            raise PathError(
+                "Cannot modify tuple (immutable container)",
+                PathErrorCode.IMMUTABLE_CONTAINER
+            )
+        
+        else:
+            raise PathError(
+                f"Cannot navigate into {type(current).__name__}",
+                PathErrorCode.NON_NAVIGABLE_TYPE
+            )
+    
+    return current
+
+
+def set_final_value(
+    parent: Union[dict, list],
+    key: Union[str, int],
+    value: Any,
+    *,
+    create: bool = False
+) -> None:
+    """Set the final value at the given key in parent container.
+    
+    Handles dict assignment and list append/modify logic.
+    
+    Args:
+        parent: The parent container (dict or list).
+        key: The key or index to set.
+        value: The value to set.
+        create: If True, allow appending to lists.
+    
+    Raises:
+        PathError: If setting fails (e.g., out of bounds, immutable container).
+    """
+    if isinstance(parent, dict):
+        parent[key] = value
+    
+    elif isinstance(parent, list):
+        if not is_int_key(key):
+            raise PathError(
+                f"Expected numeric index for list, got '{key}'",
+                PathErrorCode.INVALID_INDEX
+            )
+        
+        idx = resolve_write_index(parent, key)
+        
+        # Extend list if appending
+        if idx == len(parent):
+            if not create:
+                raise PathError(
+                    f"Index {idx} does not exist. Use create=True to append.",
+                    PathErrorCode.INVALID_INDEX
+                )
+            parent.append(value)
+        else:
+            parent[idx] = value
+    
+    elif isinstance(parent, tuple):
+        raise PathError(
+            "Cannot modify tuple (immutable container)",
+            PathErrorCode.IMMUTABLE_CONTAINER
+        )
+    
+    else:
+        raise PathError(
+            f"Cannot set value in {type(parent).__name__}",
+            PathErrorCode.NON_NAVIGABLE_TYPE
+        )
+
+
+def navigate_to_parent_for_delete(
+    data: Any,
+    keys: List[Union[str, int]]
+) -> Any:
+    """Navigate to the parent container of the final key for deletion.
+    
+    Raises PathError if any intermediate key is missing.
+    
+    Args:
+        data: The root data structure.
+        keys: List of keys to navigate through (excluding final key).
+    
+    Returns:
+        The parent container of the final key.
+    
+    Raises:
+        PathError: If any intermediate key is missing or navigation fails.
+    """
+    current = data
+    
+    for key in keys:
+        if isinstance(current, dict):
+            if key not in current:
+                raise PathError(
+                    f"Key '{key}' not found",
+                    PathErrorCode.MISSING_KEY
+                )
+            current = current[key]
+        
+        elif isinstance(current, (list, tuple)):
+            if not is_int_key(key):
+                raise PathError(
+                    f"Expected numeric index, got '{key}'",
+                    PathErrorCode.INVALID_INDEX
+                )
+            
+            idx = resolve_read_index(current, key)
+            if idx is None:
+                raise PathError(
+                    f"Index '{key}' out of bounds",
+                    PathErrorCode.INVALID_INDEX
+                )
+            current = current[idx]
+        
+        else:
+            raise PathError(
+                f"Cannot navigate through {type(current).__name__}",
+                PathErrorCode.NON_NAVIGABLE_TYPE
+            )
+    
+    return current
+
+
+def delete_from_container(
+    parent: Union[dict, list],
+    key: Union[str, int],
+    *,
+    allow_list_mutation: bool = False
+) -> Any:
+    """Delete and return value from parent container.
+    
+    Handles dict.pop() and list.pop() with validation.
+    
+    Args:
+        parent: The parent container (dict or list).
+        key: The key or index to delete.
+        allow_list_mutation: If True, allows deletion from lists.
+    
+    Returns:
+        The deleted value.
+    
+    Raises:
+        PathError: If deletion fails (e.g., key not found, immutable container,
+            list mutation disabled).
+    """
+    if isinstance(parent, dict):
+        if key not in parent:
+            raise PathError(
+                f"Key '{key}' not found",
+                PathErrorCode.MISSING_KEY
+            )
+        return parent.pop(key)
+    
+    elif isinstance(parent, list):
+        if not allow_list_mutation:
+            raise PathError(
+                "List deletion disabled. Set allow_list_mutation=True",
+                PathErrorCode.OPERATION_DISABLED
+            )
+        
+        if not is_int_key(key):
+            raise PathError(
+                f"Expected numeric index, got '{key}'",
+                PathErrorCode.INVALID_INDEX
+            )
+        
+        idx = resolve_read_index(parent, key)
+        if idx is None:
+            raise PathError(
+                f"Index '{key}' out of bounds",
+                PathErrorCode.INVALID_INDEX
+            )
+        return parent.pop(idx)
+    
+    elif isinstance(parent, tuple):
+        raise PathError(
+            "Cannot delete from tuple (immutable)",
+            PathErrorCode.IMMUTABLE_CONTAINER
+        )
+    
+    else:
+        raise PathError(
+            f"Cannot delete from {type(parent).__name__}",
+            PathErrorCode.NON_NAVIGABLE_TYPE
+        )

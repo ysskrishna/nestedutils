@@ -1,14 +1,18 @@
 from typing import Any, List, Union
 from nestedutils.exceptions import PathError
 from nestedutils.enums import PathErrorCode
-from nestedutils.helpers import normalize_path, is_int_key, resolve_write_index, resolve_read_index
-from nestedutils.helpers import create_intermediate_container
+from nestedutils.helpers import (
+    normalize_path,
+    navigate_one_step,
+    navigate_to_parent,
+    set_final_value,
+    navigate_to_parent_for_delete,
+    delete_from_container,
+    MISSING,
+)
 
 
-_MISSING = object()
-
-
-def get_at(data: Any, path: Union[str, List[Any]], *, default: Any = _MISSING) -> Any:
+def get_at(data: Any, path: Union[str, List[Any]], *, default: Any = MISSING) -> Any:
     """Retrieve a value from a nested data structure.
     
     Navigates through nested dictionaries, lists, and tuples using a path specified as either
@@ -60,43 +64,14 @@ def get_at(data: Any, path: Union[str, List[Any]], *, default: Any = _MISSING) -
     current = data
     
     for key in keys:
-        if isinstance(current, dict):
-            if key not in current:
-                if default is not _MISSING:
-                    return default
-                raise PathError(
-                    f"Key '{key}' not found",
-                    PathErrorCode.MISSING_KEY
-                )
-            current = current[key]
-        
-        elif isinstance(current, (list, tuple)):
-            if not is_int_key(key):
-                if default is not _MISSING:
-                    return default
-                raise PathError(
-                    f"Expected numeric index, got '{key}'",
-                    PathErrorCode.INVALID_INDEX
-                )
-            
-            idx = resolve_read_index(current, key)
-            if idx is None:
-                if default is not _MISSING:
-                    return default
-                raise PathError(
-                    f"Index '{key}' out of bounds in path",
-                    PathErrorCode.INVALID_INDEX
-                )
-            
-            current = current[idx]
-        
-        else:
-            if default is not _MISSING:
-                return default
-            raise PathError(
-                f"Cannot navigate into {type(current).__name__} at '{key}'",
-                PathErrorCode.NON_NAVIGABLE_TYPE
-            )
+        current = navigate_one_step(
+            current,
+            key,
+            default=default,
+            raise_on_missing=(default is MISSING)
+        )
+        # If default was used, navigate_one_step returns default
+        # If navigation failed and default is MISSING, it raises PathError
     
     return current
 
@@ -230,107 +205,16 @@ def set_at(
         ```
     """
     keys = normalize_path(path)
-    current = data
     
-    # Navigate intermediate keys
-    for i, key in enumerate(keys[:-1]):
-        next_key = keys[i + 1]
-        
-        if isinstance(current, dict):
-            if key not in current:
-                if not create:
-                    raise PathError(
-                        f"Key '{key}' does not exist. Use create=True to auto-create path.",
-                        PathErrorCode.MISSING_KEY
-                    )
-                # Create intermediate container based on next key type
-                current[key] = create_intermediate_container(next_key)
-            elif current[key] is None:
-                if not create:
-                    raise PathError(
-                        f"Key '{key}' is None. Use create=True to replace with container.",
-                        PathErrorCode.MISSING_KEY
-                    )
-                current[key] = create_intermediate_container(next_key)
-            
-            current = current[key]
-        
-        elif isinstance(current, list):
-            if not is_int_key(key):
-                raise PathError(
-                    f"Expected numeric index for list, got '{key}'",
-                    PathErrorCode.INVALID_INDEX
-                )
-            
-            idx = resolve_write_index(current, key)
-            
-            # Extend list if needed (only for append, not gaps)
-            if idx == len(current):
-                if not create:
-                    raise PathError(
-                        f"Index {idx} does not exist. Use create=True to append.",
-                        PathErrorCode.INVALID_INDEX
-                    )
-                current.append(create_intermediate_container(next_key))
-            elif current[idx] is None:
-                if not create:
-                    raise PathError(
-                        f"Index {idx} is None. Use create=True to replace with container.",
-                        PathErrorCode.MISSING_KEY
-                    )
-                current[idx] = create_intermediate_container(next_key)
-            
-            current = current[idx]
-        
-        elif isinstance(current, tuple):
-            raise PathError(
-                "Cannot modify tuple (immutable container)",
-                PathErrorCode.IMMUTABLE_CONTAINER
-            )
-        
-        else:
-            raise PathError(
-                f"Cannot navigate into {type(current).__name__}",
-                PathErrorCode.NON_NAVIGABLE_TYPE
-            )
-    
-    # Set final value
-    final_key = keys[-1]
-    
-    if isinstance(current, dict):
-        current[final_key] = value
-    
-    elif isinstance(current, list):
-        if not is_int_key(final_key):
-            raise PathError(
-                f"Expected numeric index for list, got '{final_key}'",
-                PathErrorCode.INVALID_INDEX
-            )
-        
-        idx = resolve_write_index(current, final_key)
-        
-        # Extend list if appending
-        if idx == len(current):
-            if not create:
-                raise PathError(
-                    f"Index {idx} does not exist. Use create=True to append.",
-                    PathErrorCode.INVALID_INDEX
-                )
-            current.append(value)
-        else:
-            current[idx] = value
-    
-    elif isinstance(current, tuple):
-        raise PathError(
-            "Cannot modify tuple (immutable container)",
-            PathErrorCode.IMMUTABLE_CONTAINER
-        )
-    
+    if len(keys) == 1:
+        # Single key - set directly on root
+        set_final_value(data, keys[0], value, create=create)
     else:
-        raise PathError(
-            f"Cannot set value in {type(current).__name__}",
-            PathErrorCode.NON_NAVIGABLE_TYPE
-        )
+        # Navigate to parent, then set final value
+        intermediate_keys = keys[:-1]
+        final_key = keys[-1]
+        parent = navigate_to_parent(data, intermediate_keys, final_key, create=create)
+        set_final_value(parent, final_key, value, create=create)
 
 
 def delete_at(
@@ -378,79 +262,13 @@ def delete_at(
         ```
     """
     keys = normalize_path(path)
-    current = data
     
-    # Navigate to parent
-    for key in keys[:-1]:
-        if isinstance(current, dict):
-            if key not in current:
-                raise PathError(
-                    f"Key '{key}' not found",
-                    PathErrorCode.MISSING_KEY
-                )
-            current = current[key]
-        
-        elif isinstance(current, (list, tuple)):
-            if not is_int_key(key):
-                raise PathError(
-                    f"Expected numeric index, got '{key}'",
-                    PathErrorCode.INVALID_INDEX
-                )
-            
-            idx = resolve_read_index(current, key)
-            if idx is None:
-                raise PathError(
-                    f"Index '{key}' out of bounds",
-                    PathErrorCode.INVALID_INDEX
-                )
-            current = current[idx]
-        
-        else:
-            raise PathError(
-                f"Cannot navigate through {type(current).__name__}",
-                PathErrorCode.NON_NAVIGABLE_TYPE
-            )
-    
-    # Delete final key
-    final_key = keys[-1]
-    
-    if isinstance(current, dict):
-        if final_key not in current:
-            raise PathError(
-                f"Key '{final_key}' not found",
-                PathErrorCode.MISSING_KEY
-            )
-        return current.pop(final_key)
-    
-    elif isinstance(current, list):
-        if not allow_list_mutation:
-            raise PathError(
-                "List deletion disabled. Set allow_list_mutation=True",
-                PathErrorCode.OPERATION_DISABLED
-            )
-        
-        if not is_int_key(final_key):
-            raise PathError(
-                f"Expected numeric index, got '{final_key}'",
-                PathErrorCode.INVALID_INDEX
-            )
-        
-        idx = resolve_read_index(current, final_key)
-        if idx is None:
-            raise PathError(
-                f"Index '{final_key}' out of bounds",
-                PathErrorCode.INVALID_INDEX
-            )
-        return current.pop(idx)
-    
-    elif isinstance(current, tuple):
-        raise PathError(
-            "Cannot delete from tuple (immutable)",
-            PathErrorCode.IMMUTABLE_CONTAINER
-        )
-    
+    if len(keys) == 1:
+        # Single key - delete directly from root
+        return delete_from_container(data, keys[0], allow_list_mutation=allow_list_mutation)
     else:
-        raise PathError(
-            f"Cannot delete from {type(current).__name__}",
-            PathErrorCode.NON_NAVIGABLE_TYPE
-        )
+        # Navigate to parent, then delete final key
+        intermediate_keys = keys[:-1]
+        final_key = keys[-1]
+        parent = navigate_to_parent_for_delete(data, intermediate_keys)
+        return delete_from_container(parent, final_key, allow_list_mutation=allow_list_mutation)
