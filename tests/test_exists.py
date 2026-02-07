@@ -221,7 +221,7 @@ class TestExistsComplexScenarios:
         from nestedutils import set_at
         d = {}
         assert exists_at(d, "a.b.c") is False
-        set_at(d, "a.b.c", 1)
+        set_at(d, "a.b.c", 1, create=True)
         assert exists_at(d, "a.b.c") is True
     
     def test_exists_after_delete(self):
@@ -233,15 +233,17 @@ class TestExistsComplexScenarios:
         assert exists_at(d, "a.b") is False
         assert exists_at(d, "a.c") is True
     
-    def test_exists_with_sparse_list(self):
-        """Check existence in sparse list created with fill_strategy."""
+    def test_exists_with_sequential_list(self):
+        """Check existence in sequentially built list."""
         from nestedutils import set_at
         d = {}
-        set_at(d, "items.5", "Item 6", fill_strategy="none")
-        assert exists_at(d, "items.5") is True
-        assert exists_at(d, "items.0") is True  # None values exist
-        assert exists_at(d, "items.4") is True  # None values exist
-        assert exists_at(d, "items.6") is False
+        set_at(d, "items.0", "Item 1", create=True)
+        set_at(d, "items.1", "Item 2", create=True)
+        set_at(d, "items.2", "Item 3", create=True)
+        assert exists_at(d, "items.0") is True
+        assert exists_at(d, "items.1") is True
+        assert exists_at(d, "items.2") is True
+        assert exists_at(d, "items.3") is False
     
     def test_exists_root_level(self):
         """Check existence at root level."""
@@ -256,7 +258,7 @@ class TestExistsComplexScenarios:
         d = {"a": None}
         assert exists_at(d, "a") is True
         assert exists_at(d, "a.b") is False
-        set_at(d, "a.b.c", 10)
+        set_at(d, "a.b.c", 10, create=True)
         assert exists_at(d, "a") is True
         assert exists_at(d, "a.b") is True
         assert exists_at(d, "a.b.c") is True

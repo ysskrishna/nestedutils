@@ -1,7 +1,7 @@
 """Enumerations for nestedutils library.
 
-This module defines error codes and configuration enums used throughout
-the nestedutils library for consistent error handling and behavior control.
+This module defines error codes used throughout the nestedutils library
+for consistent error handling.
 """
 
 from enum import Enum
@@ -16,32 +16,24 @@ class PathErrorCode(Enum):
         
         data = {"a": {"b": 1}}
         try:
-            get_at(data, "a.c.d")
+            result = get_at(data, "a.c.d")
+            # get_at raises PathError for missing paths in v2.0
         except PathError as e:
             if e.code == PathErrorCode.MISSING_KEY:
                 print("Key not found")
         ```
     """
     INVALID_INDEX = "INVALID_INDEX"
-    MISSING_KEY = "MISSING_KEY"
-    EMPTY_PATH = "EMPTY_PATH"
-    IMMUTABLE_CONTAINER = "IMMUTABLE_CONTAINER"
-    INVALID_PATH = "INVALID_PATH"
-    INVALID_FILL_STRATEGY = "INVALID_FILL_STRATEGY"
-
-
-class FillStrategy(Enum):
-    """Strategy for filling missing containers when setting nested paths.
+    """Raised when a list index is invalid (non-numeric, out of bounds, or would create sparse list)."""
     
-    Example:
-        ```python
-        from nestedutils import set_at, FillStrategy
-        
-        data = {}
-        set_at(data, "items.0.name", "apple", fill_strategy=FillStrategy.AUTO)
-        ```
-    """
-    AUTO = "auto"
-    NONE = "none"
-    DICT = "dict"
-    LIST = "list"
+    MISSING_KEY = "MISSING_KEY"
+    """Raised when a required key doesn't exist (in set_at with create=False or delete_at)."""
+    
+    EMPTY_PATH = "EMPTY_PATH"
+    """Raised when path is empty or contains empty keys."""
+    
+    IMMUTABLE_CONTAINER = "IMMUTABLE_CONTAINER"
+    """Raised when attempting to modify an immutable container (tuple)."""
+    
+    INVALID_PATH = "INVALID_PATH"
+    """Raised when path format is invalid (wrong type, exceeds max depth, etc.)."""

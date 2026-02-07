@@ -18,14 +18,21 @@ class PathError(Exception):
     
     Example:
         ```python
-        from nestedutils import get_at, PathError, PathErrorCode
+        from nestedutils import set_at, PathError, PathErrorCode
         
         data = {"a": {"b": 1}}
+        
+        # set_at raises when path doesn't exist (create=False is default)
         try:
-            get_at(data, "a.c.d")
+            set_at(data, "a.c.d", "value")
         except PathError as e:
             if e.code == PathErrorCode.MISSING_KEY:
-                print("Key not found")
+                print(f"Path doesn't exist: {e.message}")
+        
+        # get_at raises for missing paths in v2.0 - use default= for optional values
+        from nestedutils import get_at
+        result = get_at(data, "a.c.d", default="not found")
+        print(result)  # "not found"
         ```
     """
     

@@ -206,7 +206,7 @@ class TestDeleteComplex:
         """Delete value that was just set."""
         d = {}
         from nestedutils import set_at
-        set_at(d, "a.b.c", 1)
+        set_at(d, "a.b.c", 1, create=True)
         val = delete_at(d, "a.b.c")
         assert val == 1
         assert d == {"a": {"b": {}}}

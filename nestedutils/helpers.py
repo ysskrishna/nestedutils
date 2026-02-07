@@ -1,6 +1,6 @@
 from typing import Any, List, Union, Optional
 from .exceptions import PathError
-from .enums import PathErrorCode, FillStrategy
+from .enums import PathErrorCode
 from .constants import MAX_DEPTH, MAX_LIST_SIZE
 
 
@@ -16,14 +16,15 @@ def normalize_path(path: Union[str, List[Any]]) -> List[str]:
         path: Either a dot-notation string (e.g., "a.b.c") or a list of keys.
     
     Returns:
-        List of string keys representing the path.
+        List of string keys representing the path. All elements are guaranteed to be strings.
     
     Raises:
         PathError: If path format is invalid, path is empty, contains empty keys,
             or exceeds maximum depth.
     """
     if isinstance(path, list):
-        keys = [key for key in path]
+        # Convert all list elements to strings
+        keys = [str(key) for key in path]
     elif isinstance(path, str):
         keys = path.split(".")
     else:
@@ -50,6 +51,9 @@ def normalize_path(path: Union[str, List[Any]]) -> List[str]:
 def is_int_key(key: str) -> bool:
     """Check if a key represents a valid integer index.
     
+    STRICT CHECKING: Only accepts string representations of integers.
+    Rejects: bool, float, complex, or any other type.
+    
     Args:
         key: String to check.
     
@@ -63,9 +67,19 @@ def is_int_key(key: str) -> bool:
         True
         >>> is_int_key("abc")
         False
-        >>> is_int_key("-")
+        >>> is_int_key("")
+        False
+        >>> is_int_key(True)  # Not a string
+        False
+        >>> is_int_key(3.14)  # Not a string
         False
     """
+    if not isinstance(key, str):
+        return False
+    
+    if not key:  # Empty string
+        return False
+    
     try:
         int(key)
         return True
@@ -118,29 +132,50 @@ def resolve_read_index(container: Union[list, tuple], key: str) -> Optional[int]
     return None
 
 
-def resolve_write_index(container: list, key: str, allow_extension: bool = True) -> int:
+def resolve_write_index(container: list, key: str) -> int:
     """Resolve index for write operations (set_at).
     
-    Write operations have stricter semantics:
+    Write operations have strict semantics to prevent sparse lists:
     - Negative indices must reference existing elements (no extension)
-    - Positive indices can extend the list if allow_extension=True
-    - Positive indices cannot exceed MAX_LIST_SIZE to prevent memory exhaustion
+    - Positive indices can only extend by 1 (append operation)
+    - Index must be <= len(list) (can append, but not create gaps)
+    - Index cannot exceed MAX_LIST_SIZE
     
     Args:
         container: The list to index into.
         key: String representation of the index.
-        allow_extension: If True, positive indices can exceed current list length.
-                        If False, all indices must reference existing elements.
     
     Returns:
         Resolved positive index.
     
     Raises:
-        PathError: If index is out of bounds, exceeds MAX_LIST_SIZE, or key cannot be parsed as integer.
+        PathError: If index is out of bounds, would create sparse list,
+            exceeds MAX_LIST_SIZE, or key is not a valid integer.
+    
+    Examples:
+        >>> lst = [10, 20, 30]
+        >>> resolve_write_index(lst, "3")  # Append
+        3
+        >>> resolve_write_index(lst, "1")  # Modify existing
+        1
+        >>> resolve_write_index(lst, "-1")  # Modify last
+        2
+        >>> resolve_write_index(lst, "5")  # Would create gap
+        PathError: Index 5 out of bounds for list of length 3 (no sparse lists)
+        >>> resolve_write_index(lst, "-5")  # Negative out of bounds
+        PathError: Index -5 out of bounds for list of length 3
     """
     idx = parse_int_key(key)
     length = len(container)
     
+    # Check maximum size limit first (before any calculations)
+    if idx > MAX_LIST_SIZE:
+        raise PathError(
+            f"List index {idx} exceeds maximum size {MAX_LIST_SIZE}",
+            PathErrorCode.INVALID_INDEX
+        )
+    
+    # Handle negative indices
     if idx < 0:
         resolved = length + idx
         if resolved < 0 or resolved >= length:
@@ -150,16 +185,11 @@ def resolve_write_index(container: list, key: str, allow_extension: bool = True)
             )
         return resolved
     
-    # Check maximum list size when extension is allowed
-    if allow_extension and idx > MAX_LIST_SIZE:
+    # Handle positive indices - NO SPARSE LISTS
+    if idx > length:
         raise PathError(
-            f"List index {idx} exceeds maximum size {MAX_LIST_SIZE}",
-            PathErrorCode.INVALID_INDEX
-        )
-    
-    if not allow_extension and idx >= length:
-        raise PathError(
-            f"Index {key} out of bounds for list of length {length}",
+            f"Index {idx} out of bounds for list of length {length} "
+            f"(no sparse lists allowed - index must be <= {length})",
             PathErrorCode.INVALID_INDEX
         )
     
@@ -196,58 +226,25 @@ def navigate(container: Any, key: str, default: Any) -> Any:
     return default
 
 
-def create_container(strategy: FillStrategy, next_key: str) -> Union[dict, list]:
-    """Create a new container based on fill strategy and next key.
+def create_intermediate_container(next_key: str) -> Union[dict, list]:
+    """Create intermediate container based on next key type.
+    
+    Logic:
+    - If next_key is numeric → create list
+    - Otherwise → create dict
     
     Args:
-        strategy: The fill strategy to use.
-        next_key: The next key in the path (used for "auto" strategy).
+        next_key: The next key in the path.
     
     Returns:
-        A new dict or list.
-    """
-    if strategy == FillStrategy.DICT:
-        return {}
-    elif strategy == FillStrategy.LIST:
-        return []
-    else:  # auto or none
-        return [] if is_int_key(next_key) else {}
-
-
-def fill_list_gaps(target: list, up_to_index: int, strategy: FillStrategy) -> None:
-    """Fill gaps in a list up to (but not including) target index.
+        Empty list or dict.
     
-    Args:
-        target: The list to extend.
-        up_to_index: The target index to reach.
-        strategy: How to fill the gaps (None for auto/none, dict/list for others).
+    Examples:
+        >>> create_intermediate_container("0")
+        []
+        >>> create_intermediate_container("name")
+        {}
+        >>> create_intermediate_container("-1")
+        []
     """
-    while len(target) < up_to_index:
-        if strategy == FillStrategy.DICT:
-            target.append({})
-        elif strategy == FillStrategy.LIST:
-            target.append([])
-        else:  # auto or none
-            target.append(None)
-
-
-def ensure_container_at_index(
-    target: list, 
-    index: int, 
-    strategy: FillStrategy, 
-    next_key: str
-) -> None:
-    """Ensure there's a navigable container at the given index.
-    
-    Creates a new container if index doesn't exist or contains None.
-    
-    Args:
-        target: The list to modify.
-        index: The index to ensure a container at.
-        strategy: How to create containers.
-        next_key: The next key in the path (for "auto" strategy).
-    """
-    if len(target) == index:
-        target.append(create_container(strategy, next_key))
-    elif target[index] is None:
-        target[index] = create_container(strategy, next_key)
+    return [] if is_int_key(next_key) else {}

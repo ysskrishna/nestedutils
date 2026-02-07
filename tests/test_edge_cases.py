@@ -38,9 +38,8 @@ class TestExceptionHandling:
             PathErrorCode.EMPTY_PATH,
             PathErrorCode.IMMUTABLE_CONTAINER,
             PathErrorCode.INVALID_PATH,
-            PathErrorCode.INVALID_FILL_STRATEGY,
         ]
-        assert len(codes) == 6
+        assert len(codes) == 5
     
     def test_error_code_values(self):
         """Verify error code string values."""
@@ -49,7 +48,6 @@ class TestExceptionHandling:
         assert PathErrorCode.EMPTY_PATH.value == "EMPTY_PATH"
         assert PathErrorCode.IMMUTABLE_CONTAINER.value == "IMMUTABLE_CONTAINER"
         assert PathErrorCode.INVALID_PATH.value == "INVALID_PATH"
-        assert PathErrorCode.INVALID_FILL_STRATEGY.value == "INVALID_FILL_STRATEGY"
 
 
 class TestPathNormalizationEdgeCases:
@@ -69,22 +67,26 @@ class TestComplexIntegrationScenarios:
     def test_round_trip_operations(self):
         """Multiple operations in sequence."""
         d = {}
-        set_at(d, "a.b.c", 1)
+        set_at(d, "a.b.c", 1, create=True)
         assert get_at(d, "a.b.c") == 1
-        set_at(d, "a.b.d", 2)
+        set_at(d, "a.b.d", 2, create=True)
         assert get_at(d, "a.b.d") == 2
         val = delete_at(d, "a.b.c")
         assert val == 1
-        assert get_at(d, "a.b.c") is None
+        with pytest.raises(PathError):
+            get_at(d, "a.b.c")
         assert get_at(d, "a.b.d") == 2
     
     def test_mixed_numeric_and_string_keys(self):
         """Mixed numeric and string keys."""
         d = {}
-        set_at(d, "a.0.b.1.c", 42)
+        # Build structure sequentially - first create index 0, then index 1
+        set_at(d, "a.0.b.0.c", 10, create=True)  # Create list at a[0]["b"] with first element
+        set_at(d, "a.0.b.1.c", 42, create=True)  # Now can append to list
         assert isinstance(d["a"], list)
         assert isinstance(d["a"][0], dict)
         assert isinstance(d["a"][0]["b"], list)
+        assert d["a"][0]["b"][0]["c"] == 10
         assert d["a"][0]["b"][1]["c"] == 42
 
 
@@ -96,8 +98,12 @@ class TestEmptyAndNoneValues:
         d1 = {"a": None}
         d2 = {}
         assert get_at(d1, "a") is None
-        assert get_at(d2, "a") is None
-        # Both return None, but one has the key, one doesn't
+        with pytest.raises(PathError):
+            get_at(d2, "a")
+        # With default, both return None
+        assert get_at(d1, "a", default="missing") is None
+        assert get_at(d2, "a", default="missing") == "missing"
+        # But one has the key, one doesn't
         assert "a" in d1
         assert "a" not in d2
 
@@ -109,14 +115,14 @@ class TestLargeStructures:
         """Very deeply nested structure."""
         d = {}
         path = ".".join(["level" + str(i) for i in range(20)])
-        set_at(d, path, "deep")
+        set_at(d, path, "deep", create=True)
         assert get_at(d, path) == "deep"
     
     def test_many_keys_in_dict(self):
         """Dict with many keys."""
         d = {}
         for i in range(100):
-            set_at(d, f"key{i}", i)
+            set_at(d, f"key{i}", i, create=True)
         for i in range(100):
             assert get_at(d, f"key{i}") == i
 
@@ -148,19 +154,19 @@ class TestSpecialCharacters:
     def test_keys_with_special_chars(self):
         """Keys with special characters."""
         d = {}
-        set_at(d, "a-b.c_d.e@f", 42)
+        set_at(d, "a-b.c_d.e@f", 42, create=True)
         assert get_at(d, "a-b.c_d.e@f") == 42
     
     def test_keys_with_spaces_in_list_form(self):
         """Keys with spaces using list form."""
         d = {}
-        set_at(d, ["key with spaces", "another key"], 1)
+        set_at(d, ["key with spaces", "another key"], 1, create=True)
         assert get_at(d, ["key with spaces", "another key"]) == 1
     
     def test_keys_with_newlines_in_list_form(self):
         """Keys with newlines using list form."""
         d = {}
-        set_at(d, ["key\nwith\nnewlines"], 1)
+        set_at(d, ["key\nwith\nnewlines"], 1, create=True)
         assert get_at(d, ["key\nwith\nnewlines"]) == 1
 
 
@@ -174,15 +180,18 @@ class TestNegativeIndexEdgeCases:
         assert get_at(d, "a.-1") == 30
         assert get_at(d, "a.-2") == 20
         assert get_at(d, "a.-3") == 10
-        # Just out of bounds
-        assert get_at(d, "a.-4") is None
-        assert get_at(d, "a.-5") is None
+        # Just out of bounds - raises PathError
+        with pytest.raises(PathError):
+            get_at(d, "a.-4")
+        with pytest.raises(PathError):
+            get_at(d, "a.-5")
     
     def test_negative_index_single_element_list(self):
         """Negative index on single element list."""
         d = {"a": [42]}
         assert get_at(d, "a.-1") == 42
-        assert get_at(d, "a.-2") is None
+        with pytest.raises(PathError):
+            get_at(d, "a.-2")
         # Can modify with negative index
         set_at(d, "a.-1", 99)
         assert d["a"] == [99]
@@ -212,9 +221,12 @@ class TestNegativeIndexEdgeCases:
     def test_negative_index_very_large_negative(self):
         """Very large negative numbers should be out of bounds."""
         d = {"a": [1, 2, 3]}
-        assert get_at(d, "a.-1000") is None
-        assert get_at(d, "a.-999999") is None
-        # Should not raise, just return default
+        with pytest.raises(PathError):
+            get_at(d, "a.-1000")
+        with pytest.raises(PathError):
+            get_at(d, "a.-999999")
+        # With default, returns default
+        assert get_at(d, "a.-1000", default="missing") == "missing"
     
     def test_negative_index_chaining(self):
         """Chaining multiple negative index operations."""
@@ -235,5 +247,6 @@ class TestNegativeIndexEdgeCases:
         assert get_at(d, "items.-2") == 4
         assert get_at(d, "items.-4") == 1
         # -5 should now be out of bounds
-        assert get_at(d, "items.-5") is None
+        with pytest.raises(PathError):
+            get_at(d, "items.-5")
 
