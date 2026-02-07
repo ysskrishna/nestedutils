@@ -148,14 +148,14 @@ class TestDeleteErrorCases:
         d = {"a": 5}
         with pytest.raises(PathError) as exc_info:
             delete_at(d, "a.b")
-        assert exc_info.value.code == PathErrorCode.INVALID_PATH
-    
+        assert exc_info.value.code == PathErrorCode.NON_NAVIGABLE_TYPE
+
     def test_delete_from_none(self):
         """Delete from None should fail."""
         d = {"a": None}
         with pytest.raises(PathError) as exc_info:
             delete_at(d, "a.b")
-        assert exc_info.value.code == PathErrorCode.INVALID_PATH
+        assert exc_info.value.code == PathErrorCode.NON_NAVIGABLE_TYPE
     
     def test_delete_from_tuple(self):
         """Delete from tuple should fail (immutable)."""

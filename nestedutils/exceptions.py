@@ -6,7 +6,7 @@ for detailed error handling.
 """
 
 from typing import Optional
-from .enums import PathErrorCode
+from nestedutils.enums import PathErrorCode
 
 
 class PathError(Exception):

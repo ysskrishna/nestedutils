@@ -1,7 +1,7 @@
 from typing import Any, List, Union, Optional
-from .exceptions import PathError
-from .enums import PathErrorCode
-from .constants import MAX_DEPTH, MAX_LIST_SIZE
+from nestedutils.exceptions import PathError
+from nestedutils.enums import PathErrorCode
+from nestedutils.constants import MAX_DEPTH, MAX_LIST_SIZE
 
 
 def normalize_path(path: Union[str, List[Any]]) -> List[Union[str, int]]:
