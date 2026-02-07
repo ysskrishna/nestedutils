@@ -1,7 +1,7 @@
 from typing import Any, List, Union
 from .exceptions import PathError
 from .enums import PathErrorCode
-from .helpers import normalize_path, navigate, is_int_key, resolve_write_index, resolve_read_index
+from .helpers import normalize_path, is_int_key, resolve_write_index, resolve_read_index
 from .helpers import create_intermediate_container
 
 

@@ -196,36 +196,6 @@ def resolve_write_index(container: list, key: str) -> int:
     return idx
 
 
-def navigate(container: Any, key: str, default: Any) -> Any:
-    """Navigate one level into a container.
-    
-    Used by read operations (get_at, exists_at). Returns default
-    for any navigation failures rather than raising exceptions.
-    
-    Args:
-        container: Container to navigate into (dict, list, or tuple).
-        key: Key or index to access.
-        default: Sentinel value to return on failure.
-    
-    Returns:
-        The value at the key, or default if navigation fails.
-    """
-    if isinstance(container, dict):
-        return container.get(key, default)
-    
-    if isinstance(container, (list, tuple)):
-        if not is_int_key(key):
-            return default
-        
-        idx = resolve_read_index(container, key)
-        if idx is None:
-            return default
-        
-        return container[idx]
-    
-    return default
-
-
 def create_intermediate_container(next_key: str) -> Union[dict, list]:
     """Create intermediate container based on next key type.
     
