@@ -48,6 +48,12 @@ user_name = get_at(data, "users.0.profile.name")
 - **Configuration Management**: Easily read and modify deeply nested settings in configuration dictionaries.
 - **Data Transformation**: Rapidly remap data from one complex structure to another using `get_at` and `set_at`.
 
+## Terminology
+
+- **Path**: A navigation string or list that specifies a location in nested data (e.g., `"user.profile.name"` or `["user", "profile", "name"]`)
+- **Key**: An individual dictionary key used to access a value (e.g., `"name"`, `"profile"`)
+- **Index**: A numeric position in a list or tuple (e.g., `0`, `-1` for last element)
+
 ## Installation
 
 ```bash
@@ -192,6 +198,8 @@ Delete a value from a nested data structure.
 - `data`: The data structure to modify
 - `path`: Path to the value to delete
 - `allow_list_mutation`: If `True`, allows deletion from lists (default: `False`)
+
+**Note:** List deletion is disabled by default to prevent accidental index shifting that could break subsequent code. When you delete an element from a list, all following indices shift down, which can cause unexpected behavior if other parts of your code reference those indices.
 
 **Returns:** The deleted value
 

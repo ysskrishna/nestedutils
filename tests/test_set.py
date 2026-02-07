@@ -234,7 +234,7 @@ class TestSetErrorCases:
             set_at(d, "a.-1", 5, create=True)
         assert exc_info.value.code == PathErrorCode.INVALID_INDEX
     
-    def test_numeric_key_on_existing_dict(self):
+    def test_set_numeric_string_creates_dict_key_not_list(self):
         """Setting numeric key on existing dict creates string key."""
         d = {"a": {"b": 1}}
         set_at(d, "a.0", 5)

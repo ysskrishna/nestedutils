@@ -38,7 +38,7 @@ class TestDeleteBasic:
 class TestDeleteListOperations:
     """Tests for deleting from lists."""
     
-    def test_delete_list_index_disallowed(self):
+    def test_delete_list_requires_allow_list_mutation_flag(self):
         """Delete list index without allow_list_mutation should fail."""
         d = {"a": [1, 2, 3]}
         with pytest.raises(PathError) as exc_info:

@@ -154,7 +154,7 @@ class TestGetPathNormalization:
         d = {"a.b": {"c.d": 10}}
         assert get_at(d, ["a.b", "c.d"]) == 10
     
-    def test_complex_keys_in_list_form(self):
+    def test_integer_vs_string_key_distinction(self):
         """List form handles any key type: special characters, dots, integers (preserved or converted)."""
         # Create data structure with complex keys
         data = {

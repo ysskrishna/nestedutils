@@ -102,7 +102,7 @@ class TestLargeStructures:
             assert get_at(d, f"key{i}") == i
 
 
-class TestTypeCoercion:
+class TestListPathTypeHandling:
     """Tests for type coercion and conversion."""
     
     def test_list_path_with_string_numbers(self):
@@ -165,4 +165,62 @@ class TestNegativeIndexEdgeCases:
         # -5 should now be out of bounds
         with pytest.raises(PathError):
             get_at(d, "items.-5")
+
+
+class TestMissingEdgeCases:
+    """Additional edge cases for comprehensive coverage."""
+
+    def test_get_empty_path_raises(self):
+        """Empty path should raise EMPTY_PATH error."""
+        with pytest.raises(PathError) as exc:
+            get_at({}, "")
+        assert exc.value.code == PathErrorCode.EMPTY_PATH
+
+    def test_set_empty_path_raises(self):
+        """Empty path should raise EMPTY_PATH error for set_at."""
+        with pytest.raises(PathError) as exc:
+            set_at({}, "", 1)
+        assert exc.value.code == PathErrorCode.EMPTY_PATH
+
+    def test_delete_empty_path_raises(self):
+        """Empty path should raise EMPTY_PATH error for delete_at."""
+        with pytest.raises(PathError) as exc:
+            delete_at({}, "")
+        assert exc.value.code == PathErrorCode.EMPTY_PATH
+
+    def test_set_non_container_root_raises(self):
+        """Setting on non-container root should raise NON_NAVIGABLE_TYPE."""
+        with pytest.raises(PathError) as exc:
+            set_at(42, "a", 1)
+        assert exc.value.code == PathErrorCode.NON_NAVIGABLE_TYPE
+
+    def test_get_non_container_root_raises(self):
+        """Getting from non-container root should raise NON_NAVIGABLE_TYPE."""
+        with pytest.raises(PathError) as exc:
+            get_at(42, "a")
+        assert exc.value.code == PathErrorCode.NON_NAVIGABLE_TYPE
+
+    def test_delete_non_container_root_raises(self):
+        """Deleting from non-container root should raise NON_NAVIGABLE_TYPE."""
+        with pytest.raises(PathError) as exc:
+            delete_at(42, "a")
+        assert exc.value.code == PathErrorCode.NON_NAVIGABLE_TYPE
+
+    def test_get_from_set_raises(self):
+        """Accessing set elements should raise NON_NAVIGABLE_TYPE."""
+        with pytest.raises(PathError) as exc:
+            get_at({"a": {1, 2, 3}}, "a.0")
+        assert exc.value.code == PathErrorCode.NON_NAVIGABLE_TYPE
+
+    def test_get_from_frozenset_raises(self):
+        """Accessing frozenset elements should raise NON_NAVIGABLE_TYPE."""
+        with pytest.raises(PathError) as exc:
+            get_at({"a": frozenset([1, 2, 3])}, "a.0")
+        assert exc.value.code == PathErrorCode.NON_NAVIGABLE_TYPE
+
+    def test_set_into_string_raises(self):
+        """Setting into a string should raise NON_NAVIGABLE_TYPE."""
+        with pytest.raises(PathError) as exc:
+            set_at({"a": "hello"}, "a.0", "x")
+        assert exc.value.code == PathErrorCode.NON_NAVIGABLE_TYPE
 

@@ -65,7 +65,7 @@ def get_at(data: Any, path: Union[str, List[Any]], *, default: Any = _MISSING) -
                 if default is not _MISSING:
                     return default
                 raise PathError(
-                    f"Key '{key}' not found in path",
+                    f"Key '{key}' not found",
                     PathErrorCode.MISSING_KEY
                 )
             current = current[key]
@@ -145,7 +145,7 @@ def exists_at(data: Any, path: Union[str, List[Any]]) -> bool:
         ```
     """
     try:
-        get_at(data, path)  # Uses strict mode internally
+        get_at(data, path)  # No default provided, so raises on missing path
         return True
     except PathError as e:
         # Return False for "not found" errors or navigation into non-navigable types
@@ -385,7 +385,7 @@ def delete_at(
         if isinstance(current, dict):
             if key not in current:
                 raise PathError(
-                    f"Key not found: '{key}'",
+                    f"Key '{key}' not found",
                     PathErrorCode.MISSING_KEY
                 )
             current = current[key]
@@ -417,7 +417,7 @@ def delete_at(
     if isinstance(current, dict):
         if final_key not in current:
             raise PathError(
-                f"Key not found: '{final_key}'",
+                f"Key '{final_key}' not found",
                 PathErrorCode.MISSING_KEY
             )
         return current.pop(final_key)
