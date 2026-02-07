@@ -23,10 +23,10 @@ class TestNormalizePathValid:
         (["a", "b"], ["a", "b"]),
         (["a", "b", "c"], ["a", "b", "c"]),
         
-        # List paths - mixed types (converted to strings)
-        (["user", 0, "name"], ["user", "0", "name"]),
-        ([0, 1, 2], ["0", "1", "2"]),
-        (["items", -1], ["items", "-1"]),
+        # List paths - integers preserved
+        (["user", 0, "name"], ["user", 0, "name"]),
+        ([0, 1, 2], [0, 1, 2]),
+        (["items", -1], ["items", -1]),
     ])
     def test_valid_paths(self, path, expected):
         """Test that valid paths are normalized correctly."""

@@ -155,23 +155,25 @@ class TestGetPathNormalization:
         assert get_at(d, ["a.b", "c.d"]) == 10
     
     def test_complex_keys_in_list_form(self):
-        """List form handles any key type: special characters, dots, integers (converted to strings)."""
+        """List form handles any key type: special characters, dots, integers (preserved or converted)."""
         # Create data structure with complex keys
-        # Note: normalize_path converts all list elements to strings, so integer keys become string keys
         data = {
             "user-info": {
                 "first.name": {
-                    "123": "found it!"  # String key since normalize_path converts to strings
+                    "123": "string_key_value",  # String key
+                    123: "int_key_value"  # Integer key
                 }
             }
         }
         
         # Verify each level works independently
-        assert get_at(data, ["user-info"]) == {"first.name": {"123": "found it!"}}
-        assert get_at(data, ["user-info", "first.name"]) == {"123": "found it!"}
+        assert get_at(data, ["user-info"]) == {"first.name": {"123": "string_key_value", 123: "int_key_value"}}
+        assert get_at(data, ["user-info", "first.name"]) == {"123": "string_key_value", 123: "int_key_value"}
         
-        # List form works - integer 123 in path is converted to string "123"
-        assert get_at(data, ["user-info", "first.name", 123]) == "found it!"
+        # Integer in path accesses integer key (preserved)
+        assert get_at(data, ["user-info", "first.name", 123]) == "int_key_value"
+        # String in path accesses string key
+        assert get_at(data, ["user-info", "first.name", "123"]) == "string_key_value"
         
         # Test with default for missing path
         assert get_at(data, ["user-info", "first.name", 999], default="not found") == "not found"
@@ -258,25 +260,25 @@ class TestGetEdgeCases:
         assert get_at(d, "0.1.2") == 5
     
     def test_get_dict_with_integer_vs_string_keys(self):
-        """Test that normalize_path converts all list elements to strings.
+        """Test that integer keys in paths are preserved and can access integer dict keys.
         
-        Since normalize_path() converts all list elements to strings to ensure
-        List[str] return type, integer keys in list paths are converted to strings.
+        normalize_path() now preserves integer types from list paths, allowing
+        dictionaries with integer keys to be accessed using integer values in paths.
         """
         # Dictionary with both integer key and string key
         data = {0: "int_value", "0": "string_value"}
         
-        # Both integer and string in path are converted to string "0"
-        # So both access the string key "0"
-        assert get_at(data, [0]) == "string_value"  # Converted to ["0"]
-        assert get_at(data, ["0"]) == "string_value"  # Already string
+        # Integer in path accesses integer key
+        assert get_at(data, [0]) == "int_value"  # Preserves int, accesses int key
+        # String in path accesses string key
+        assert get_at(data, ["0"]) == "string_value"  # String accesses string key
         
         # Verify direct access still distinguishes
         assert data[0] == "int_value"
         assert data["0"] == "string_value"
         
-        # List paths can only access string keys now (all converted to strings)
-        assert get_at(data, [0]) == get_at(data, ["0"])  # Both become "0"
+        # List paths now distinguish between integer and string keys
+        assert get_at(data, [0]) != get_at(data, ["0"])  # Different keys, different values
     
     def test_get_mixed_types(self):
         """Get from structure with mixed types."""
