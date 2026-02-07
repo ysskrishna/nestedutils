@@ -106,15 +106,10 @@ Try the `nestedutils` library directly in your browser! This page uses [Pyodide]
         placeholder="Value to set"
         style="flex: 1; min-width: 150px; padding: 8px; border: 1px solid #ccc; border-radius: 4px;"
       />
-      <select 
-        id="set-strategy" 
-        style="flex: 0 0 120px; padding: 8px; border: 1px solid #ccc; border-radius: 4px; background: white;"
-      >
-        <option value="auto">auto</option>
-        <option value="none">none</option>
-        <option value="dict">dict</option>
-        <option value="list">list</option>
-      </select>
+      <label style="display: flex; align-items: center; gap: 5px; padding: 8px; cursor: pointer;">
+        <input type="checkbox" id="set-create" checked />
+        <span style="font-size: 0.9em;">Create missing containers</span>
+      </label>
       <button 
         id="set-btn" 
         style="padding: 8px 16px; background: #1976d2; color: white; border: none; border-radius: 4px; cursor: pointer;"
@@ -123,8 +118,7 @@ Try the `nestedutils` library directly in your browser! This page uses [Pyodide]
       </button>
     </div>
     <p style="color: #666; font-size: 0.85em; margin-top: 5px;">
-      <strong>Fill Strategy:</strong> <code>auto</code> (smart defaults), <code>none</code> (fill gaps with None), 
-      <code>dict</code> (always create dicts), <code>list</code> (always create lists)
+      <strong>Create missing containers:</strong> When checked, automatically creates missing intermediate containers (dicts for string keys, lists for numeric keys).
     </p>
     <div id="set-result" style="margin-top: 10px; padding: 10px; background: #f5f5f5; border-radius: 4px; min-height: 30px;"></div>
   </div>
@@ -707,7 +701,7 @@ Try the `nestedutils` library directly in your browser! This page uses [Pyodide]
     document.getElementById("set-btn").addEventListener("click", async () => {
       const path = document.getElementById("set-path").value.trim();
       const value = document.getElementById("set-value").value.trim();
-      const strategy = document.getElementById("set-strategy").value;
+      const create = document.getElementById("set-create").checked;
       const resultDiv = document.getElementById("set-result");
       
       if (!path || value === "") {
@@ -738,7 +732,7 @@ Try the `nestedutils` library directly in your browser! This page uses [Pyodide]
           }
         }
         
-        pyodide.runPython(`set_at(data, ${JSON.stringify(path)}, ${JSON.stringify(parsedValue)}, fill_strategy=${JSON.stringify(strategy)})`);
+        pyodide.runPython(`set_at(data, ${JSON.stringify(path)}, ${JSON.stringify(parsedValue)}, create=${create ? 'True' : 'False'})`);
         updateDataDisplay(true);
         resultDiv.innerHTML = `<span class="result-success">✓ Value set successfully</span>`;
       } catch (error) {

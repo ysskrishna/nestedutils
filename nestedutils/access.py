@@ -452,5 +452,5 @@ def delete_at(
     else:
         raise PathError(
             f"Cannot delete from {type(current).__name__}",
-            PathErrorCode.INVALID_PATH
+            PathErrorCode.NON_NAVIGABLE_TYPE
         )

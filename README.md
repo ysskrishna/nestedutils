@@ -37,8 +37,7 @@ user_name = get_at(data, "users.0.profile.name")
 - **Simple Path Syntax**: Use dot-notation strings (`"a.b.c"`) or lists (`["a", "b", "c"]`) to navigate nested structures
 - **Mixed Data Types**: Seamlessly work with dictionaries, lists, and tuples (read-only for tuples)
 - **List Index Support**: Access list elements using numeric indices, including negative indices
-- **Auto-creation**: Automatically create missing intermediate containers when setting values
-- **Flexible Fill Strategies**: Control how missing containers are created with different fill strategies
+- **Auto-creation**: Automatically create missing intermediate containers when setting values (with `create=True`)
 - **Type Safety**: Comprehensive error handling with descriptive error messages and error codes
 - **Safety Limits**: Built-in protection against excessive nesting (max depth: 100) and oversized lists (max index: 10,000)
 - **Zero Dependencies**: Pure Python implementation with no external dependencies
@@ -64,10 +63,10 @@ from nestedutils import get_at, set_at, delete_at, exists_at
 data = {}
 
 # Set values using dot-notation
-set_at(data, "user.name", "John")
-set_at(data, "user.age", 30)
-set_at(data, "user.hobbies.0", "reading")
-set_at(data, "user.hobbies.1", "coding")
+set_at(data, "user.name", "John", create=True)
+set_at(data, "user.age", 30, create=True)
+set_at(data, "user.hobbies.0", "reading", create=True)
+set_at(data, "user.hobbies.1", "coding", create=True)
 
 # Access values
 name = get_at(data, "user.name")  # "John"
@@ -84,7 +83,7 @@ delete_at(data, "user.age")
 
 ## API Reference
 
-### `get_at(data, path, default=None)`
+### `get_at(data, path, *, default=None)`
 
 Retrieve a value from a nested data structure.
 
@@ -92,58 +91,67 @@ Retrieve a value from a nested data structure.
 
 - `data`: The data structure to navigate (dict, list, tuple, or nested combinations)
 - `path`: Path to the value (string with dot notation or list of keys/indices)
-- `default`: Value to return if path doesn't exist (default: `None`)
+- `default`: Value to return if path doesn't exist (keyword-only parameter, default: `None`)
 
-**Returns:** The value at the path, or `default` if not found
+**Returns:** The value at the path, or `default` if provided and path doesn't exist
+
+**Raises:** `PathError` if the path doesn't exist and `default` is not provided
+
+**Note:** By default, `get_at` raises `PathError` for missing paths. Use the `default` parameter for optional/nullable access.
 
 **Examples:**
 
 ```python
 data = {"a": {"b": {"c": 5}}}
 get_at(data, "a.b.c")  # 5
-get_at(data, "a.b.d", default=99)  # 99
+get_at(data, "a.b.d")  # Raises PathError (path doesn't exist)
+get_at(data, "a.b.d", default=99)  # 99 (returns default)
 
 data = {"items": [{"name": "apple"}, {"name": "banana"}]}
 get_at(data, "items.1.name")  # "banana"
 get_at(data, "items.-1.name")  # "banana" (negative index)
 ```
 
-### `set_at(data, path, value, fill_strategy="auto")`
+### `set_at(data, path, value, *, create=False)`
 
-Set a value in a nested data structure, creating intermediate containers as needed.
+Set a value in a nested data structure, optionally creating intermediate containers as needed.
 
 **Parameters:**
 
 - `data`: The data structure to modify (must be mutable: dict or list)
 - `path`: Path where to set the value (string with dot notation or list of keys/indices)
 - `value`: The value to set
-- `fill_strategy`: How to fill missing containers (default: `"auto"`)
-  - `"auto"`: Intelligently creates `{}` for dict keys, `[]` for list indices, and `None` for sparse list gaps
-  - `"none"`: Fills missing list items with `None`
-  - `"dict"`: Always creates dictionaries
-  - `"list"`: Always creates lists
+- `create`: If `True`, automatically creates missing intermediate containers (default: `False`)
 
-**Note:** Positive indices can extend lists (filling gaps as needed), but negative indices can only modify existing elements.
+**Note:** 
+- By default (`create=False`), `set_at` raises `PathError` if any intermediate key is missing
+- With `create=True`, missing containers are automatically created: `{}` for dict keys, `[]` for list indices
+- Positive indices can append to lists (index == len(list)) but cannot create gaps (index > len(list))
+- Negative indices can only modify existing elements
 
 **Examples:**
 
 ```python
+# create=True - auto-create missing containers
 data = {}
-set_at(data, "user.profile.name", "Alice")
+set_at(data, "user.profile.name", "Alice", create=True)
 # Creates: {"user": {"profile": {"name": "Alice"}}}
 
 data = {}
-set_at(data, "items.0.name", "Item 1")
+set_at(data, "items.0.name", "Item 1", create=True)
 # Creates: {"items": [{"name": "Item 1"}]}
 
+# Sequential list appending (no gaps allowed)
 data = {}
-set_at(data, "items.5", "Item 6", fill_strategy="none")
-# Creates: {"items": [None, None, None, None, None, "Item 6"]}
+set_at(data, "items.0", "first", create=True)  # Creates list with first item
+set_at(data, "items.1", "second", create=True)  # Appends second item
+# Creates: {"items": ["first", "second"]}
 
+# Sparse lists are NOT allowed - this raises PathError
 data = [1, 2, 3]
-set_at(data, "5", 99)  # Extends list with None gaps
-# Creates: [1, 2, 3, None, None, 99]
+set_at(data, "5", 99, create=True)  # Raises PathError: cannot create gap
 
+# Negative indices - modify existing only
 data = [1, 2, 3]
 set_at(data, "-1", 100)  # Updates existing last element
 # Creates: [1, 2, 100]
@@ -221,7 +229,8 @@ except PathError as e:
 - `MISSING_KEY`: Key doesn't exist in dictionary
 - `EMPTY_PATH`: Path is empty
 - `IMMUTABLE_CONTAINER`: Attempted to modify a tuple
-- `INVALID_FILL_STRATEGY`: Invalid fill strategy value
+- `NON_NAVIGABLE_TYPE`: Attempted to navigate into a non-container type
+- `OPERATION_DISABLED`: Operation is disabled by configuration (e.g., list deletion without `allow_list_mutation=True`)
 
 ## Advanced Usage
 
@@ -231,8 +240,8 @@ List paths are useful when keys contain dots:
 
 ```python
 data = {}
-set_at(data, ["user.name", "first"], "John")
-set_at(data, ["user.name", "last"], "Doe")
+set_at(data, ["user.name", "first"], "John", create=True)
+set_at(data, ["user.name", "last"], "Doe", create=True)
 # Creates: {"user.name": {"first": "John", "last": "Doe"}}
 ```
 

@@ -39,8 +39,9 @@ class TestExceptionHandling:
             PathErrorCode.IMMUTABLE_CONTAINER,
             PathErrorCode.INVALID_PATH,
             PathErrorCode.NON_NAVIGABLE_TYPE,
+            PathErrorCode.OPERATION_DISABLED,
         ]
-        assert len(codes) == 6
+        assert len(codes) == 7
     
     def test_error_code_values(self):
         """Verify error code string values."""
@@ -50,6 +51,7 @@ class TestExceptionHandling:
         assert PathErrorCode.IMMUTABLE_CONTAINER.value == "IMMUTABLE_CONTAINER"
         assert PathErrorCode.INVALID_PATH.value == "INVALID_PATH"
         assert PathErrorCode.NON_NAVIGABLE_TYPE.value == "NON_NAVIGABLE_TYPE"
+        assert PathErrorCode.OPERATION_DISABLED.value == "OPERATION_DISABLED"
 
 
 class TestComplexIntegrationScenarios:

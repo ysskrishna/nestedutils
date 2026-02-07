@@ -48,7 +48,6 @@ keywords:
       heading_level: 3
       members:
         - PathErrorCode
-        - FillStrategy
       members_order: source
       show_if_no_docstring: true
 
