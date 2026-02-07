@@ -76,8 +76,6 @@ class TestGetBasic:
             get_at(d, "items.-5.name")
         assert exc_info.value.code == PathErrorCode.INVALID_INDEX
         assert get_at(d, "items.-5.name", default="not found") == "not found"
-        with pytest.raises(PathError):
-            get_at(d, "items.-10")
     
     def test_get_negative_index_deeply_nested(self):
         """Get with negative index in deeply nested structure."""
@@ -253,11 +251,6 @@ class TestGetEdgeCases:
         """Get empty string value."""
         d = {"a": ""}
         assert get_at(d, "a") == ""
-    
-    def test_get_very_deep_nesting(self):
-        """Get from very deeply nested structure."""
-        d = {"a": {"b": {"c": {"d": {"e": {"f": {"g": 42}}}}}}}
-        assert get_at(d, "a.b.c.d.e.f.g") == 42
     
     def test_get_from_dict_with_numeric_keys(self):
         """Get from dict with numeric string keys."""

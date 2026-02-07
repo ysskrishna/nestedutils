@@ -80,7 +80,7 @@ class TestSetBasic:
         assert d["data"][-1][-1] == 99
         assert d["data"][-1] == [5, 99]
     
-    def test_set_negative_index_extends_list(self):
+    def test_set_negative_index_modifies_single_element_list(self):
         """Negative index on short list should still work."""
         d = {"a": [1]}
         set_at(d, "a.-1", 99)
@@ -273,12 +273,6 @@ class TestSetPathNormalization:
         d = {}
         set_at(d, ["a.b", "c.d"], 10, create=True)
         assert d == {"a.b": {"c.d": 10}}
-    
-    def test_unicode_keys(self):
-        """Unicode in keys should work."""
-        d = {}
-        set_at(d, "你好.world.🌍", 42, create=True)
-        assert d["你好"]["world"]["🌍"] == 42
     
     def test_path_list_with_integers(self):
         """List form path with integer keys."""

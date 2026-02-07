@@ -1,5 +1,5 @@
 import pytest
-from nestedutils import get_at, set_at, delete_at, exists_at
+from nestedutils import get_at, set_at, delete_at
 from nestedutils.exceptions import PathError, PathErrorCode
 
 
@@ -52,17 +52,6 @@ class TestExceptionHandling:
         assert PathErrorCode.NON_NAVIGABLE_TYPE.value == "NON_NAVIGABLE_TYPE"
 
 
-class TestPathNormalizationEdgeCases:
-    """Additional edge cases for path normalization."""
-    
-    def test_path_list_with_negative_index(self):
-        """List form path with negative index."""
-        d = {"a": [10, 20, 30]}
-        assert get_at(d, ["a", -1]) == 30
-        set_at(d, ["a", -1], 999)
-        assert d["a"][2] == 999
-
-
 class TestComplexIntegrationScenarios:
     """Complex integration scenarios combining multiple operations."""
     
@@ -92,24 +81,6 @@ class TestComplexIntegrationScenarios:
         assert d["a"][0]["b"][1]["c"] == 42
 
 
-class TestEmptyAndNoneValues:
-    """Tests for empty and None value handling."""
-    
-    def test_get_none_vs_missing(self):
-        """Distinguish between None value and missing key."""
-        d1 = {"a": None}
-        d2 = {}
-        assert get_at(d1, "a") is None
-        with pytest.raises(PathError):
-            get_at(d2, "a")
-        # With default, both return None
-        assert get_at(d1, "a", default="missing") is None
-        assert get_at(d2, "a", default="missing") == "missing"
-        # But one has the key, one doesn't
-        assert "a" in d1
-        assert "a" not in d2
-
-
 class TestLargeStructures:
     """Tests for large data structures."""
     
@@ -137,13 +108,7 @@ class TestTypeCoercion:
         d = {"a": [1, 2, 3]}
         assert get_at(d, ["a", "0"]) == 1
         assert get_at(d, ["a", "1"]) == 2
-    
-    def test_list_path_with_integers(self):
-        """List form path with actual integers."""
-        d = {"a": [1, 2, 3]}
-        assert get_at(d, ["a", 0]) == 1
-        assert get_at(d, ["a", 1]) == 2
-    
+
     def test_mixed_path_types(self):
         """Mixed path types in list form."""
         d = {"a": {"0": [1, 2, 3]}}
@@ -173,53 +138,8 @@ class TestSpecialCharacters:
 
 
 class TestNegativeIndexEdgeCases:
-    """Comprehensive edge cases for negative indices."""
-    
-    def test_negative_index_boundary_conditions(self):
-        """Test negative indices at boundaries."""
-        d = {"a": [10, 20, 30]}
-        # Valid negative indices
-        assert get_at(d, "a.-1") == 30
-        assert get_at(d, "a.-2") == 20
-        assert get_at(d, "a.-3") == 10
-        # Just out of bounds - raises PathError
-        with pytest.raises(PathError):
-            get_at(d, "a.-4")
-        with pytest.raises(PathError):
-            get_at(d, "a.-5")
-    
-    def test_negative_index_single_element_list(self):
-        """Negative index on single element list."""
-        d = {"a": [42]}
-        assert get_at(d, "a.-1") == 42
-        with pytest.raises(PathError):
-            get_at(d, "a.-2")
-        # Can modify with negative index
-        set_at(d, "a.-1", 99)
-        assert d["a"] == [99]
-    
-    def test_negative_index_in_intermediate_path(self):
-        """Negative index used in intermediate path steps."""
-        d = {"data": [[1, 2], [3, 4], [5, 6]]}
-        # Navigate using negative index, then access nested
-        assert get_at(d, "data.-1.0") == 5
-        assert get_at(d, "data.-2.-1") == 4
-        # Set using negative index in intermediate path
-        set_at(d, "data.-1.-1", 99)
-        assert d["data"][-1] == [5, 99]
-    
-    def test_negative_index_with_tuples(self):
-        """Negative index works with tuples (read-only)."""
-        d = {"a": (10, 20, 30)}
-        assert get_at(d, "a.-1") == 30
-        assert get_at(d, "a.-2") == 20
-        assert exists_at(d, "a.-1") is True
-        assert exists_at(d, "a.-4") is False
-        # Cannot modify tuples
-        with pytest.raises(PathError) as exc_info:
-            set_at(d, "a.-1", 99)
-        assert exc_info.value.code == PathErrorCode.IMMUTABLE_CONTAINER
-    
+    """Edge cases for negative indices not covered in operation-specific tests."""
+
     def test_negative_index_very_large_negative(self):
         """Very large negative numbers should be out of bounds."""
         d = {"a": [1, 2, 3]}
@@ -229,15 +149,7 @@ class TestNegativeIndexEdgeCases:
             get_at(d, "a.-999999")
         # With default, returns default
         assert get_at(d, "a.-1000", default="missing") == "missing"
-    
-    def test_negative_index_chaining(self):
-        """Chaining multiple negative index operations."""
-        d = {"levels": [[[1, 2], [3, 4]], [[5, 6], [7, 8]]]}
-        # Navigate through multiple levels using negative indices
-        assert get_at(d, "levels.-1.-1.-1") == 8
-        assert get_at(d, "levels.-1.-1.-2") == 7
-        assert get_at(d, "levels.-2.-1.-1") == 4
-    
+
     def test_negative_index_after_list_mutation(self):
         """Negative index behavior after list mutations."""
         d = {"items": [1, 2, 3, 4, 5]}

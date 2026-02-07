@@ -107,14 +107,6 @@ class TestExistsPathNormalization:
         assert exists_at(d, ["items", -2, "name"]) is True
         assert exists_at(d, ["items", -5, "name"]) is False
     
-    def test_exists_unicode_keys(self):
-        """Check existence with unicode keys."""
-        d = {}
-        d["你好"] = {"world": {"🌍": 42}}
-        assert exists_at(d, "你好.world.🌍") is True
-        assert exists_at(d, "你好.world.🌎") is False
-        assert exists_at(d, ["你好", "world", "🌍"]) is True
-    
     def test_exists_keys_with_dots_in_list_form(self):
         """List form allows keys with dots."""
         d = {"a.b": {"c.d": 10}}
@@ -156,12 +148,6 @@ class TestExistsEdgeCases:
         """Check existence of empty string value."""
         d = {"a": ""}
         assert exists_at(d, "a") is True
-    
-    def test_exists_very_deep_nesting(self):
-        """Check existence in very deeply nested structure."""
-        d = {"a": {"b": {"c": {"d": {"e": {"f": {"g": 42}}}}}}}
-        assert exists_at(d, "a.b.c.d.e.f.g") is True
-        assert exists_at(d, "a.b.c.d.e.f.h") is False
     
     def test_exists_from_dict_with_numeric_keys(self):
         """Check existence in dict with numeric string keys."""

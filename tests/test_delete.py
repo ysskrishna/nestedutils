@@ -212,8 +212,8 @@ class TestDeleteComplex:
         assert d == {"a": {"b": {}}}
 
 
-class TestDeleteInvalidPaths:
-    """Tests for invalid path types in delete_at."""
+class TestDeletePathFormats:
+    """Tests for different path formats in delete_at."""
     
     def test_delete_path_as_list(self):
         """Delete using list form path."""
