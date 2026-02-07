@@ -37,3 +37,6 @@ class PathErrorCode(Enum):
     
     INVALID_PATH = "INVALID_PATH"
     """Raised when path format is invalid (wrong type, exceeds max depth, etc.)."""
+    
+    NON_NAVIGABLE_TYPE = "NON_NAVIGABLE_TYPE"
+    """Raised when attempting to navigate into a non-container type (e.g., None, int, str)."""

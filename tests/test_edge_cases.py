@@ -38,8 +38,9 @@ class TestExceptionHandling:
             PathErrorCode.EMPTY_PATH,
             PathErrorCode.IMMUTABLE_CONTAINER,
             PathErrorCode.INVALID_PATH,
+            PathErrorCode.NON_NAVIGABLE_TYPE,
         ]
-        assert len(codes) == 5
+        assert len(codes) == 6
     
     def test_error_code_values(self):
         """Verify error code string values."""
@@ -48,6 +49,7 @@ class TestExceptionHandling:
         assert PathErrorCode.EMPTY_PATH.value == "EMPTY_PATH"
         assert PathErrorCode.IMMUTABLE_CONTAINER.value == "IMMUTABLE_CONTAINER"
         assert PathErrorCode.INVALID_PATH.value == "INVALID_PATH"
+        assert PathErrorCode.NON_NAVIGABLE_TYPE.value == "NON_NAVIGABLE_TYPE"
 
 
 class TestPathNormalizationEdgeCases:

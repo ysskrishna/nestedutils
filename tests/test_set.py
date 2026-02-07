@@ -216,7 +216,7 @@ class TestSetErrorCases:
         d = {"a": 1}
         with pytest.raises(PathError) as exc_info:
             set_at(d, "a.b", 10)
-        assert exc_info.value.code == PathErrorCode.INVALID_PATH
+        assert exc_info.value.code == PathErrorCode.NON_NAVIGABLE_TYPE
     
     def test_set_negative_index_on_empty_list(self):
         """Can't use negative index on empty list."""

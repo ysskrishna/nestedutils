@@ -95,7 +95,7 @@ def get_at(data: Any, path: Union[str, List[Any]], *, default: Any = _MISSING) -
                 return default
             raise PathError(
                 f"Cannot navigate into {type(current).__name__} at '{key}'",
-                PathErrorCode.INVALID_PATH
+                PathErrorCode.NON_NAVIGABLE_TYPE
             )
     
     return current
@@ -149,17 +149,9 @@ def exists_at(data: Any, path: Union[str, List[Any]]) -> bool:
         return True
     except PathError as e:
         # Return False for "not found" errors or navigation into non-navigable types
-        if e.code in (PathErrorCode.MISSING_KEY, PathErrorCode.INVALID_INDEX, PathErrorCode.INVALID_PATH):
-            # Check if it's a navigation error (trying to navigate into None, etc.)
-            # vs a path format error (empty path, wrong type, etc.)
-            if e.code == PathErrorCode.INVALID_PATH:
-                # If message indicates navigation into non-navigable type, return False
-                if "Cannot navigate into" in str(e.message):
-                    return False
-                # Otherwise it's a path format error, re-raise
-                raise
+        if e.code in (PathErrorCode.MISSING_KEY, PathErrorCode.INVALID_INDEX, PathErrorCode.NON_NAVIGABLE_TYPE):
             return False
-        # Re-raise for any other errors
+        # Re-raise for path format errors and any other errors
         raise
 
 
@@ -299,7 +291,7 @@ def set_at(
         else:
             raise PathError(
                 f"Cannot navigate into {type(current).__name__}",
-                PathErrorCode.INVALID_PATH
+                PathErrorCode.NON_NAVIGABLE_TYPE
             )
     
     # Set final value
