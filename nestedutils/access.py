@@ -329,7 +329,7 @@ def set_at(
     else:
         raise PathError(
             f"Cannot set value in {type(current).__name__}",
-            PathErrorCode.INVALID_PATH
+            PathErrorCode.NON_NAVIGABLE_TYPE
         )
 
 
@@ -408,7 +408,7 @@ def delete_at(
         else:
             raise PathError(
                 f"Cannot navigate through {type(current).__name__}",
-                PathErrorCode.INVALID_PATH
+                PathErrorCode.NON_NAVIGABLE_TYPE
             )
     
     # Delete final key
@@ -426,7 +426,7 @@ def delete_at(
         if not allow_list_mutation:
             raise PathError(
                 "List deletion disabled. Set allow_list_mutation=True",
-                PathErrorCode.INVALID_PATH
+                PathErrorCode.OPERATION_DISABLED
             )
         
         if not is_int_key(final_key):

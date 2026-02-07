@@ -43,7 +43,7 @@ class TestDeleteListOperations:
         d = {"a": [1, 2, 3]}
         with pytest.raises(PathError) as exc_info:
             delete_at(d, "a.1")
-        assert exc_info.value.code == PathErrorCode.INVALID_PATH
+        assert exc_info.value.code == PathErrorCode.OPERATION_DISABLED
     
     def test_delete_list_index_allowed(self):
         """Delete list index with allow_list_mutation=True."""

@@ -40,3 +40,6 @@ class PathErrorCode(Enum):
     
     NON_NAVIGABLE_TYPE = "NON_NAVIGABLE_TYPE"
     """Raised when attempting to navigate into a non-container type (e.g., None, int, str)."""
+    
+    OPERATION_DISABLED = "OPERATION_DISABLED"
+    """Raised when an operation is disabled by configuration (e.g., list mutation without allow_list_mutation=True)."""
