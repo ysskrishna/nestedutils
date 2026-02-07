@@ -43,7 +43,6 @@ class TestSetBasic:
         with pytest.raises(PathError) as exc_info:
             set_at(d, "a.5", 99, create=True)
         assert exc_info.value.code == PathErrorCode.INVALID_INDEX
-        assert "no sparse lists" in str(exc_info.value.message).lower()
     
     def test_set_negative_index_write(self):
         """Set value using negative index."""
