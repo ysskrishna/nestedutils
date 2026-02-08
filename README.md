@@ -51,9 +51,11 @@ user_name = get_at(data, "users.0.profile.name")
 
 ## Terminology
 
-- **Path**: A navigation string or list that specifies a location in nested data (e.g., `"user.profile.name"` or `["user", "profile", "name"]`)
-- **Key**: An individual dictionary key used to access a value (e.g., `"name"`, `"profile"`)
-- **Index**: A numeric position in a list or tuple (e.g., `0`, `-1` for last element)
+| Term | Definition |
+|------|------------|
+| **Path** | A navigation string or list that specifies a location in nested data (e.g., `"user.profile.name"` or `["user", "profile", "name"]`) |
+| **Key** | An individual dictionary key used to access a value (e.g., `"name"`, `"profile"`) |
+| **Index** | A numeric position in a list or tuple (e.g., `0`, `-1` for last element) |
 
 ## Installation
 
@@ -306,13 +308,15 @@ except PathError as e:
 
 **Error Codes:**
 
-- `INVALID_PATH`: Invalid path format or type
-- `INVALID_INDEX`: Invalid list index
-- `MISSING_KEY`: Key doesn't exist in dictionary
-- `EMPTY_PATH`: Path is empty
-- `IMMUTABLE_CONTAINER`: Attempted to modify a tuple
-- `NON_NAVIGABLE_TYPE`: Attempted to navigate into a non-container type
-- `OPERATION_DISABLED`: Operation is disabled by configuration (e.g., list deletion without `allow_list_mutation=True`)
+| Error Code | Description |
+|------------|-------------|
+| `INVALID_PATH` | Invalid path format or type |
+| `INVALID_INDEX` | Invalid list index |
+| `MISSING_KEY` | Key doesn't exist in dictionary |
+| `EMPTY_PATH` | Path is empty |
+| `IMMUTABLE_CONTAINER` | Attempted to modify a tuple |
+| `NON_NAVIGABLE_TYPE` | Attempted to navigate into a non-container type |
+| `OPERATION_DISABLED` | Operation is disabled by configuration (e.g., list deletion without `allow_list_mutation=True`) |
 
 ## Advanced Usage
 
@@ -363,8 +367,10 @@ set_at(data, "a.b.c", 10)
 
 The library includes built-in safety limits to prevent excessive resource usage:
 
-- **Maximum Path Depth**: 100 levels (prevents deeply nested paths that could cause stack issues)
-- **Maximum List Index**: 10,000 (prevents creating extremely large sparse lists)
+| Limit | Value | Description |
+|-------|-------|-------------|
+| **Maximum Path Depth** | 100 levels | Prevents deeply nested paths that could cause stack issues |
+| **Maximum List Index** | 10,000 | Prevents creating extremely large sparse lists |
 
 These limits help protect against accidental memory exhaustion or performance issues. If you hit these limits, you'll receive a `PathError` with a clear message.
 
