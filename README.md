@@ -38,6 +38,7 @@ user_name = get_at(data, "users.0.profile.name")
 - **Mixed Data Types**: Seamlessly work with dictionaries, lists, and tuples (read-only for tuples)
 - **List Index Support**: Access list elements using numeric indices, including negative indices
 - **Auto-creation**: Automatically create missing intermediate containers when setting values (with `create=True`)
+- **Introspection**: Analyze nested structures with `get_depth`, `count_leaves`, and `get_all_paths`
 - **Type Safety**: Comprehensive error handling with descriptive error messages and error codes
 - **Safety Limits**: Built-in protection against excessive nesting (max depth: 100) and oversized lists (max index: 10,000)
 - **Zero Dependencies**: Pure Python implementation with no external dependencies
@@ -63,7 +64,7 @@ pip install nestedutils
 ## Quick Start
 
 ```python
-from nestedutils import get_at, set_at, delete_at, exists_at
+from nestedutils import get_at, set_at, delete_at, exists_at, get_depth, count_leaves, get_all_paths
 
 # Create a nested structure
 data = {}
@@ -214,6 +215,79 @@ delete_at(data, "a.b")  # Returns 1, data becomes {"a": {"c": 2}}
 data = {"items": [1, 2, 3]}
 delete_at(data, "items.1", allow_list_mutation=True)  # Returns 2
 # data becomes {"items": [1, 3]}
+```
+
+### `get_depth(data)`
+
+Get the maximum nesting depth of a data structure.
+
+**Parameters:**
+
+- `data`: Any nested structure (dict, list, tuple, or primitive)
+
+**Returns:** Integer depth. Primitives return 0, empty containers return 1.
+
+**Note:** Only dict, list, and tuple are traversed. Other container types (set, frozenset, etc.) are treated as leaf values.
+
+**Examples:**
+
+```python
+get_depth(42)                          # 0 (primitive)
+get_depth({})                          # 1 (empty container)
+get_depth({"a": 1})                    # 1 (flat dict)
+get_depth({"a": {"b": 1}})             # 2 (nested)
+get_depth({"a": {"b": {"c": 1}}})      # 3 (deeper nesting)
+get_depth([1, [2, [3]]])               # 3 (nested lists)
+```
+
+### `count_leaves(data)`
+
+Count the total number of leaf values (non-container values) in a nested structure.
+
+**Parameters:**
+
+- `data`: Any nested structure
+
+**Returns:** Integer count of leaf values. Empty containers return 0.
+
+**Note:** Only dict, list, and tuple are traversed. Other container types (set, frozenset, etc.) count as a single leaf.
+
+**Examples:**
+
+```python
+count_leaves(42)                       # 1 (primitive is a leaf)
+count_leaves({})                       # 0 (empty container)
+count_leaves({"a": 1, "b": 2})         # 2 (two leaf values)
+count_leaves({"a": {"b": 1, "c": 2}})  # 2 (nested, still 2 leaves)
+count_leaves([1, 2, [3, 4]])           # 4 (four leaf values)
+```
+
+### `get_all_paths(data)`
+
+Get all paths to leaf values in a nested structure.
+
+**Parameters:**
+
+- `data`: Any nested structure
+
+**Returns:** List of paths, where each path is a list of keys (strings) and indices (integers).
+
+**Note:** Only dict, list, and tuple are traversed. Other container types are treated as leaves.
+
+**Examples:**
+
+```python
+get_all_paths({"a": 1, "b": 2})
+# [["a"], ["b"]]
+
+get_all_paths({"a": {"b": 1, "c": 2}})
+# [["a", "b"], ["a", "c"]]
+
+get_all_paths({"users": [{"name": "Alice"}, {"name": "Bob"}]})
+# [["users", 0, "name"], ["users", 1, "name"]]
+
+get_all_paths({})                      # [] (no leaves)
+get_all_paths(42)                      # [[]] (primitive has empty path)
 ```
 
 ## Error Handling
