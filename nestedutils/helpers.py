@@ -253,8 +253,6 @@ def create_intermediate_container(next_key: Union[str, int]) -> Union[dict, list
     return [] if is_int_key(next_key) else {}
 
 
-# Navigation helpers for access.py
-
 MISSING = object()
 
 

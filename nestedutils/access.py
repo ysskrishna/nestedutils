@@ -17,10 +17,8 @@ def get_at(data: Any, path: Union[str, List[Any]], *, default: Any = MISSING) ->
     
     Navigates through nested dictionaries, lists, and tuples using a path specified as either
     a dot-notation string or a list of keys/indices. By default, raises PathError if the path
-    does not exist. Supports negative indexing for lists and tuples.
-    
-    This function raises PathError for missing paths by default. Use the `default` parameter
-    to return a value instead of raising.
+    does not exist. Use the `default` parameter to return a value instead of raising.
+    Supports negative indexing for lists and tuples.
     
     Args:
         data: The data structure to navigate (dict, list, tuple, or nested combinations).
@@ -70,8 +68,6 @@ def get_at(data: Any, path: Union[str, List[Any]], *, default: Any = MISSING) ->
             default=default,
             raise_on_missing=(default is MISSING)
         )
-        # If default was used, navigate_one_step returns default
-        # If navigation failed and default is MISSING, it raises PathError
     
     return current
 
