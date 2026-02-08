@@ -369,35 +369,31 @@ The library includes built-in safety limits to prevent excessive resource usage:
 These limits help protect against accidental memory exhaustion or performance issues. If you hit these limits, you'll receive a `PathError` with a clear message.
 
 
-## Links
-
-- **PyPI**: [pypi.org/project/nestedutils](https://pypi.org/project/nestedutils/)
-- **Documentation**: [ysskrishna.github.io/nestedutils](https://ysskrishna.github.io/nestedutils/)
-- **Interactive Demo**: [ysskrishna.github.io/nestedutils/demo/](https://ysskrishna.github.io/nestedutils/demo/)
-- **Repository**: [github.com/ysskrishna/nestedutils.git](https://github.com/ysskrishna/nestedutils.git)
-- **Issues**: [github.com/ysskrishna/nestedutils/issues](https://github.com/ysskrishna/nestedutils/issues)
-
 ## Contributing
 
 Contributions are welcome! Please read our [Contributing Guide](https://github.com/ysskrishna/nestedutils/blob/main/CONTRIBUTING.md) for details on our code of conduct, development setup, and the process for submitting pull requests.
 
 ## Support
 
-If you find this library useful, please consider:
+If you find this library helpful:
 
-- ⭐ **Starring** the repository on GitHub to help others discover it.
-- 💖 **Sponsoring** to support ongoing maintenance and development.
-
-[Become a Sponsor on GitHub](https://github.com/sponsors/ysskrishna) | [Support on Patreon](https://patreon.com/ysskrishna)
+- ⭐ Star the repository
+- 🐛 Report issues
+- 🔀 Submit pull requests
+- 💝 [Sponsor on GitHub](https://github.com/sponsors/ysskrishna)
 
 ## License
 
-MIT License - see [LICENSE](https://github.com/ysskrishna/nestedutils/blob/main/LICENSE) file for details.
+MIT © [Y. Siva Sai Krishna](https://github.com/ysskrishna) - see [LICENSE](https://github.com/ysskrishna/nestedutils/blob/main/LICENSE) file for details.
 
 
-## Author
+---
 
-**Y. Siva Sai Krishna**
-
-- GitHub: [@ysskrishna](https://github.com/ysskrishna)
-- LinkedIn: [ysskrishna](https://linkedin.com/in/ysskrishna)
+<p align="left">
+  <a href="https://github.com/ysskrishna">Author's GitHub</a> •
+  <a href="https://linkedin.com/in/ysskrishna">Author's LinkedIn</a> •
+  <a href="https://github.com/ysskrishna/nestedutils/issues">Report Issues</a> •
+  <a href="https://pypi.org/project/nestedutils/">Package on PyPI</a> •
+  <a href="https://ysskrishna.github.io/nestedutils/">Package Documentation</a> •
+  <a href="https://ysskrishna.github.io/nestedutils/demo/">Package Demo</a>
+</p>
