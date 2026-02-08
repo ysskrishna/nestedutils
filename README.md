@@ -375,6 +375,10 @@ The library includes built-in safety limits to prevent excessive resource usage:
 These limits help protect against accidental memory exhaustion or performance issues. If you hit these limits, you'll receive a `PathError` with a clear message.
 
 
+## Migration from v1.x to v2.0
+
+Version 2.0 introduces breaking changes to make the library safer and more predictable. If you're upgrading from v1.x, please see the [Migration Guide](https://ysskrishna.github.io/nestedutils/migration-v1-to-v2/) for detailed upgrade instructions.
+
 ## Contributing
 
 Contributions are welcome! Please read our [Contributing Guide](https://github.com/ysskrishna/nestedutils/blob/main/CONTRIBUTING.md) for details on our code of conduct, development setup, and the process for submitting pull requests.

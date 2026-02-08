@@ -5,6 +5,37 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0] - 2025-02-06
+
+### Breaking Changes
+
+- **`get_at` now raises `PathError` by default** for missing paths instead of returning `None` silently. Use the `default` parameter for optional/nullable access: `get_at(data, "path", default=None)`
+- **`get_at` and `set_at` parameters are now keyword-only** - The `default` and `create` parameters must be passed as keyword arguments (e.g., `get_at(data, "path", default=None)`, not `get_at(data, "path", None)`)
+- **`set_at` parameter change** - The `fill_strategy` parameter has been replaced with a simpler `create` boolean parameter. Replace `fill_strategy=FillStrategy.AUTO` with `create=True`
+- **No more sparse lists** - `set_at` no longer allows creating lists with gaps. Lists must be built sequentially (index 0, then 1, then 2, etc.). Attempting to set at index > len(list) raises `PathError`
+- **Removed `FillStrategy` enum** - Use `create=True/False` instead
+- **Implicit `None` returns from `get_at`** - Now raises `PathError` by default instead of returning `None` silently
+
+### Added
+
+- **Introspection module** with new functions for analyzing nested structures:
+  - `get_depth(data)` - Returns maximum nesting depth
+  - `count_leaves(data)` - Counts total leaf values
+  - `get_all_paths(data)` - Returns all paths to leaf values
+- **`default` parameter for `get_at`** - Explicit way to handle missing paths: `get_at(data, "path", default="fallback")`
+- **`create` parameter for `set_at`** - Simple boolean to control auto-creation of intermediate containers
+- **New error codes**:
+  - `OPERATION_DISABLED` - For operations blocked by configuration (e.g., list deletion without `allow_list_mutation=True`)
+  - `NON_NAVIGABLE_TYPE` - For attempts to navigate into non-container types (e.g., int, str, set)
+
+### Changed
+
+- Improved error messages with more context about what went wrong and how to fix it
+- Refactored internal helpers for better maintainability and testability
+- Enhanced path validation with clearer error codes
+
+For detailed migration instructions, see the [Migration Guide](https://ysskrishna.github.io/nestedutils/migration-v1-to-v2/).
+
 ## [1.1.7]
 
 ### Added
@@ -12,7 +43,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - JSON textarea editor in demo page replacing read-only data display
 - Radio button selection for three example datasets (User Profile, E-commerce Data, API Response) and custom JSON input
 - Consolidated path validation tests into `test_normalize_path.py` with new test cases for complex keys and None value handling
-
 
 ### Fixed
 
@@ -133,6 +163,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Immutable container protection (tuples cannot be modified)
 - Safe list deletion (requires explicit `allow_list_mutation=True` flag)
 
+[2.0.0]: https://github.com/ysskrishna/nestedutils/compare/v1.1.7...v2.0.0
 [1.1.7]: https://github.com/ysskrishna/nestedutils/compare/v1.1.6...v1.1.7
 [1.1.6]: https://github.com/ysskrishna/nestedutils/compare/v1.1.5...v1.1.6
 [1.1.5]: https://github.com/ysskrishna/nestedutils/compare/v1.1.4...v1.1.5
