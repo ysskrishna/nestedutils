@@ -5,7 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [2.0.0] - 2025-02-06
+## [2.0.1]
+
+### Changed
+
+- **Redesigned Interactive Playground** with improved UI/UX:
+  - New top/bottom layout replacing the previous section-based design
+  - Tab-based navigation for all 7 API functions (`get_at`, `set_at`, `exists_at`, `delete_at`, `get_depth`, `count_leaves`, `get_all_paths`)
+  - Live stats bar showing data metrics (Depth, Leaves, Paths) in real-time
+  - Live Python code preview with copy-to-clipboard functionality
+  - Improved example selector with quick-switch buttons
+  - Dark-themed JSON editor with syntax validation
+  - Better responsive design for mobile devices
+
+
+## [2.0.0]
 
 ### Breaking Changes
 
@@ -163,6 +177,7 @@ For detailed migration instructions, see the [Migration Guide](https://ysskrishn
 - Immutable container protection (tuples cannot be modified)
 - Safe list deletion (requires explicit `allow_list_mutation=True` flag)
 
+[2.0.1]: https://github.com/ysskrishna/nestedutils/compare/v2.0.0...v2.0.1
 [2.0.0]: https://github.com/ysskrishna/nestedutils/compare/v1.1.7...v2.0.0
 [1.1.7]: https://github.com/ysskrishna/nestedutils/compare/v1.1.6...v1.1.7
 [1.1.6]: https://github.com/ysskrishna/nestedutils/compare/v1.1.5...v1.1.6
