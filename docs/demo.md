@@ -167,6 +167,52 @@ Try the `nestedutils` library directly in your browser! This page uses [Pyodide]
     <div id="delete-result" style="margin-top: 10px; padding: 10px; background: #f5f5f5; border-radius: 4px; min-height: 30px;"></div>
   </div>
 
+  <div class="test-section" style="margin-top: 30px;">
+    <h3>5. Introspection APIs (New in v2.0)</h3>
+    <p>Analyze the structure of your nested data:</p>
+
+    <div style="display: grid; gap: 15px; margin-top: 20px;">
+      <!-- get_depth -->
+      <div style="border: 1px solid #e0e0e0; padding: 15px; border-radius: 6px; background: #fafafa;">
+        <h4 style="margin-top: 0; margin-bottom: 10px; color: #1976d2;">get_depth</h4>
+        <p style="margin: 5px 0; font-size: 0.9em; color: #666;">Get the maximum nesting depth of your data structure.</p>
+        <button
+          id="depth-btn"
+          style="padding: 8px 16px; background: #1976d2; color: white; border: none; border-radius: 4px; cursor: pointer; margin-top: 10px;"
+        >
+          Calculate Depth
+        </button>
+        <div id="depth-result" style="margin-top: 10px; padding: 10px; background: #f5f5f5; border-radius: 4px; min-height: 30px;"></div>
+      </div>
+
+      <!-- count_leaves -->
+      <div style="border: 1px solid #e0e0e0; padding: 15px; border-radius: 6px; background: #fafafa;">
+        <h4 style="margin-top: 0; margin-bottom: 10px; color: #1976d2;">count_leaves</h4>
+        <p style="margin: 5px 0; font-size: 0.9em; color: #666;">Count the total number of leaf values (non-container values) in your data.</p>
+        <button
+          id="leaves-btn"
+          style="padding: 8px 16px; background: #1976d2; color: white; border: none; border-radius: 4px; cursor: pointer; margin-top: 10px;"
+        >
+          Count Leaves
+        </button>
+        <div id="leaves-result" style="margin-top: 10px; padding: 10px; background: #f5f5f5; border-radius: 4px; min-height: 30px;"></div>
+      </div>
+
+      <!-- get_all_paths -->
+      <div style="border: 1px solid #e0e0e0; padding: 15px; border-radius: 6px; background: #fafafa;">
+        <h4 style="margin-top: 0; margin-bottom: 10px; color: #1976d2;">get_all_paths</h4>
+        <p style="margin: 5px 0; font-size: 0.9em; color: #666;">Get all paths to leaf values in your data structure.</p>
+        <button
+          id="paths-btn"
+          style="padding: 8px 16px; background: #1976d2; color: white; border: none; border-radius: 4px; cursor: pointer; margin-top: 10px;"
+        >
+          Get All Paths
+        </button>
+        <div id="paths-result" style="margin-top: 10px; padding: 10px; background: #f5f5f5; border-radius: 4px; min-height: 30px; max-height: 300px; overflow-y: auto;"></div>
+      </div>
+    </div>
+  </div>
+
 </div>
 
 <style>
@@ -274,7 +320,7 @@ Try the `nestedutils` library directly in your browser! This page uses [Pyodide]
     
     // Import functions and initialize data
     pyodide.runPython(`
-      from nestedutils import get_at, set_at, delete_at, exists_at
+      from nestedutils import get_at, set_at, delete_at, exists_at, get_depth, count_leaves, get_all_paths
       import json
       
       # Initialize data structure
@@ -819,6 +865,71 @@ Try the `nestedutils` library directly in your browser! This page uses [Pyodide]
         document.getElementById("delete-btn").click();
       }
     });
+
+    // Introspection APIs (v2.0)
+
+    // Get depth
+    document.getElementById("depth-btn").addEventListener("click", async () => {
+      const resultDiv = document.getElementById("depth-result");
+
+      try {
+        resultDiv.innerHTML = '<span class="result-info">Processing...</span>';
+        const depth = pyodide.runPython(`get_depth(data)`);
+        resultDiv.innerHTML = `<span class="result-success">Maximum nesting depth:</span> <code style="background: white; padding: 3px 8px; border-radius: 3px; font-weight: bold; font-size: 1.1em;">${depth}</code>`;
+      } catch (error) {
+        resultDiv.innerHTML = `<span class="result-error">Error: ${escapeHtml(error.message)}</span>`;
+      }
+    });
+
+    // Count leaves
+    document.getElementById("leaves-btn").addEventListener("click", async () => {
+      const resultDiv = document.getElementById("leaves-result");
+
+      try {
+        resultDiv.innerHTML = '<span class="result-info">Processing...</span>';
+        const count = pyodide.runPython(`count_leaves(data)`);
+        resultDiv.innerHTML = `<span class="result-success">Total leaf values:</span> <code style="background: white; padding: 3px 8px; border-radius: 3px; font-weight: bold; font-size: 1.1em;">${count}</code>`;
+      } catch (error) {
+        resultDiv.innerHTML = `<span class="result-error">Error: ${escapeHtml(error.message)}</span>`;
+      }
+    });
+
+    // Get all paths
+    document.getElementById("paths-btn").addEventListener("click", async () => {
+      const resultDiv = document.getElementById("paths-result");
+
+      try {
+        resultDiv.innerHTML = '<span class="result-info">Processing...</span>';
+        const pathsJson = pyodide.runPython(`
+import json
+paths = get_all_paths(data)
+# Convert to dot notation strings for readability
+dot_paths = []
+for path in paths:
+    if not path:  # Empty path (primitive value)
+        dot_paths.append("(root)")
+    else:
+        dot_paths.append(".".join(str(p) for p in path))
+json.dumps(dot_paths)
+        `);
+
+        const paths = JSON.parse(pathsJson);
+
+        if (paths.length === 0) {
+          resultDiv.innerHTML = '<span class="result-info">No leaf values found (empty data structure)</span>';
+        } else {
+          const pathList = paths.map(p => `<li style="font-family: monospace; padding: 3px 0;">${escapeHtml(p)}</li>`).join('');
+          resultDiv.innerHTML = `
+            <span class="result-success">Found ${paths.length} path${paths.length !== 1 ? 's' : ''}:</span>
+            <ul style="margin: 10px 0; padding-left: 20px; max-height: 200px; overflow-y: auto;">
+              ${pathList}
+            </ul>
+          `;
+        }
+      } catch (error) {
+        resultDiv.innerHTML = `<span class="result-error">Error: ${escapeHtml(error.message)}</span>`;
+      }
+    });
   }
 
   function clearResults() {
@@ -826,6 +937,9 @@ Try the `nestedutils` library directly in your browser! This page uses [Pyodide]
     document.getElementById("set-result").innerHTML = "";
     document.getElementById("exists-result").innerHTML = "";
     document.getElementById("delete-result").innerHTML = "";
+    document.getElementById("depth-result").innerHTML = "";
+    document.getElementById("leaves-result").innerHTML = "";
+    document.getElementById("paths-result").innerHTML = "";
   }
 
   function escapeHtml(text) {
