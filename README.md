@@ -6,11 +6,11 @@
 [![PyPI](https://img.shields.io/pypi/v/nestedutils)](https://pypi.org/project/nestedutils/)
 [![PyPI Downloads](https://static.pepy.tech/personalized-badge/nestedutils?period=total&units=INTERNATIONAL_SYSTEM&left_color=GREY&right_color=BLUE&left_text=downloads)](https://pepy.tech/projects/nestedutils)
 [![Documentation](https://img.shields.io/badge/docs-ysskrishna.github.io%2Fnestedutils-blue.svg)](https://ysskrishna.github.io/nestedutils/)
-[![Interactive Demo](https://img.shields.io/badge/demo-Try%20it%20now!-green.svg)](https://ysskrishna.github.io/nestedutils/demo/)
+[![Interactive Playground](https://img.shields.io/badge/demo-Try%20it%20now!-green.svg)](https://ysskrishna.github.io/nestedutils/playground/)
 
 The lightweight Python library for safe, simple, dot-notation access to nested dicts and lists. Effortlessly get, set, and delete values deep in your complex JSON, API responses, and config files without verbose error-checking or handling KeyError exceptions.
 
-> 🚀 **Try it interactively in your browser!** Test the library with our [Interactive Demo](https://ysskrishna.github.io/nestedutils/demo/) - no installation required.
+> 🚀 **Try it interactively in your browser!** Test the library with our [Interactive Playground](https://ysskrishna.github.io/nestedutils/playground/) - no installation required.
 
 ![OG Image](https://raw.githubusercontent.com/ysskrishna/nestedutils/main/media/og.png)
 
@@ -405,5 +405,5 @@ MIT © [Y. Siva Sai Krishna](https://github.com/ysskrishna) - see [LICENSE](http
   <a href="https://github.com/ysskrishna/nestedutils/issues">Report Issues</a> •
   <a href="https://pypi.org/project/nestedutils/">Package on PyPI</a> •
   <a href="https://ysskrishna.github.io/nestedutils/">Package Documentation</a> •
-  <a href="https://ysskrishna.github.io/nestedutils/demo/">Package Demo</a>
+  <a href="https://ysskrishna.github.io/nestedutils/playground/">Package Playground</a>
 </p>
