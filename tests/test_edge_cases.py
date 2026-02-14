@@ -1,5 +1,5 @@
 import pytest
-from nestedutils import get_at, set_at, delete_at, exists_at
+from nestedutils import get_at, set_at, delete_at
 from nestedutils.exceptions import PathError, PathErrorCode
 
 
@@ -38,9 +38,10 @@ class TestExceptionHandling:
             PathErrorCode.EMPTY_PATH,
             PathErrorCode.IMMUTABLE_CONTAINER,
             PathErrorCode.INVALID_PATH,
-            PathErrorCode.INVALID_FILL_STRATEGY,
+            PathErrorCode.NON_NAVIGABLE_TYPE,
+            PathErrorCode.OPERATION_DISABLED,
         ]
-        assert len(codes) == 6
+        assert len(codes) == 7
     
     def test_error_code_values(self):
         """Verify error code string values."""
@@ -49,18 +50,8 @@ class TestExceptionHandling:
         assert PathErrorCode.EMPTY_PATH.value == "EMPTY_PATH"
         assert PathErrorCode.IMMUTABLE_CONTAINER.value == "IMMUTABLE_CONTAINER"
         assert PathErrorCode.INVALID_PATH.value == "INVALID_PATH"
-        assert PathErrorCode.INVALID_FILL_STRATEGY.value == "INVALID_FILL_STRATEGY"
-
-
-class TestPathNormalizationEdgeCases:
-    """Additional edge cases for path normalization."""
-    
-    def test_path_list_with_negative_index(self):
-        """List form path with negative index."""
-        d = {"a": [10, 20, 30]}
-        assert get_at(d, ["a", -1]) == 30
-        set_at(d, ["a", -1], 999)
-        assert d["a"][2] == 999
+        assert PathErrorCode.NON_NAVIGABLE_TYPE.value == "NON_NAVIGABLE_TYPE"
+        assert PathErrorCode.OPERATION_DISABLED.value == "OPERATION_DISABLED"
 
 
 class TestComplexIntegrationScenarios:
@@ -69,37 +60,27 @@ class TestComplexIntegrationScenarios:
     def test_round_trip_operations(self):
         """Multiple operations in sequence."""
         d = {}
-        set_at(d, "a.b.c", 1)
+        set_at(d, "a.b.c", 1, create=True)
         assert get_at(d, "a.b.c") == 1
-        set_at(d, "a.b.d", 2)
+        set_at(d, "a.b.d", 2, create=True)
         assert get_at(d, "a.b.d") == 2
         val = delete_at(d, "a.b.c")
         assert val == 1
-        assert get_at(d, "a.b.c") is None
+        with pytest.raises(PathError):
+            get_at(d, "a.b.c")
         assert get_at(d, "a.b.d") == 2
     
     def test_mixed_numeric_and_string_keys(self):
         """Mixed numeric and string keys."""
         d = {}
-        set_at(d, "a.0.b.1.c", 42)
+        # Build structure sequentially - first create index 0, then index 1
+        set_at(d, "a.0.b.0.c", 10, create=True)  # Create list at a[0]["b"] with first element
+        set_at(d, "a.0.b.1.c", 42, create=True)  # Now can append to list
         assert isinstance(d["a"], list)
         assert isinstance(d["a"][0], dict)
         assert isinstance(d["a"][0]["b"], list)
+        assert d["a"][0]["b"][0]["c"] == 10
         assert d["a"][0]["b"][1]["c"] == 42
-
-
-class TestEmptyAndNoneValues:
-    """Tests for empty and None value handling."""
-    
-    def test_get_none_vs_missing(self):
-        """Distinguish between None value and missing key."""
-        d1 = {"a": None}
-        d2 = {}
-        assert get_at(d1, "a") is None
-        assert get_at(d2, "a") is None
-        # Both return None, but one has the key, one doesn't
-        assert "a" in d1
-        assert "a" not in d2
 
 
 class TestLargeStructures:
@@ -109,19 +90,19 @@ class TestLargeStructures:
         """Very deeply nested structure."""
         d = {}
         path = ".".join(["level" + str(i) for i in range(20)])
-        set_at(d, path, "deep")
+        set_at(d, path, "deep", create=True)
         assert get_at(d, path) == "deep"
     
     def test_many_keys_in_dict(self):
         """Dict with many keys."""
         d = {}
         for i in range(100):
-            set_at(d, f"key{i}", i)
+            set_at(d, f"key{i}", i, create=True)
         for i in range(100):
             assert get_at(d, f"key{i}") == i
 
 
-class TestTypeCoercion:
+class TestListPathTypeHandling:
     """Tests for type coercion and conversion."""
     
     def test_list_path_with_string_numbers(self):
@@ -129,13 +110,7 @@ class TestTypeCoercion:
         d = {"a": [1, 2, 3]}
         assert get_at(d, ["a", "0"]) == 1
         assert get_at(d, ["a", "1"]) == 2
-    
-    def test_list_path_with_integers(self):
-        """List form path with actual integers."""
-        d = {"a": [1, 2, 3]}
-        assert get_at(d, ["a", 0]) == 1
-        assert get_at(d, ["a", 1]) == 2
-    
+
     def test_mixed_path_types(self):
         """Mixed path types in list form."""
         d = {"a": {"0": [1, 2, 3]}}
@@ -148,82 +123,35 @@ class TestSpecialCharacters:
     def test_keys_with_special_chars(self):
         """Keys with special characters."""
         d = {}
-        set_at(d, "a-b.c_d.e@f", 42)
+        set_at(d, "a-b.c_d.e@f", 42, create=True)
         assert get_at(d, "a-b.c_d.e@f") == 42
     
     def test_keys_with_spaces_in_list_form(self):
         """Keys with spaces using list form."""
         d = {}
-        set_at(d, ["key with spaces", "another key"], 1)
+        set_at(d, ["key with spaces", "another key"], 1, create=True)
         assert get_at(d, ["key with spaces", "another key"]) == 1
     
     def test_keys_with_newlines_in_list_form(self):
         """Keys with newlines using list form."""
         d = {}
-        set_at(d, ["key\nwith\nnewlines"], 1)
+        set_at(d, ["key\nwith\nnewlines"], 1, create=True)
         assert get_at(d, ["key\nwith\nnewlines"]) == 1
 
 
 class TestNegativeIndexEdgeCases:
-    """Comprehensive edge cases for negative indices."""
-    
-    def test_negative_index_boundary_conditions(self):
-        """Test negative indices at boundaries."""
-        d = {"a": [10, 20, 30]}
-        # Valid negative indices
-        assert get_at(d, "a.-1") == 30
-        assert get_at(d, "a.-2") == 20
-        assert get_at(d, "a.-3") == 10
-        # Just out of bounds
-        assert get_at(d, "a.-4") is None
-        assert get_at(d, "a.-5") is None
-    
-    def test_negative_index_single_element_list(self):
-        """Negative index on single element list."""
-        d = {"a": [42]}
-        assert get_at(d, "a.-1") == 42
-        assert get_at(d, "a.-2") is None
-        # Can modify with negative index
-        set_at(d, "a.-1", 99)
-        assert d["a"] == [99]
-    
-    def test_negative_index_in_intermediate_path(self):
-        """Negative index used in intermediate path steps."""
-        d = {"data": [[1, 2], [3, 4], [5, 6]]}
-        # Navigate using negative index, then access nested
-        assert get_at(d, "data.-1.0") == 5
-        assert get_at(d, "data.-2.-1") == 4
-        # Set using negative index in intermediate path
-        set_at(d, "data.-1.-1", 99)
-        assert d["data"][-1] == [5, 99]
-    
-    def test_negative_index_with_tuples(self):
-        """Negative index works with tuples (read-only)."""
-        d = {"a": (10, 20, 30)}
-        assert get_at(d, "a.-1") == 30
-        assert get_at(d, "a.-2") == 20
-        assert exists_at(d, "a.-1") is True
-        assert exists_at(d, "a.-4") is False
-        # Cannot modify tuples
-        with pytest.raises(PathError) as exc_info:
-            set_at(d, "a.-1", 99)
-        assert exc_info.value.code == PathErrorCode.IMMUTABLE_CONTAINER
-    
+    """Edge cases for negative indices not covered in operation-specific tests."""
+
     def test_negative_index_very_large_negative(self):
         """Very large negative numbers should be out of bounds."""
         d = {"a": [1, 2, 3]}
-        assert get_at(d, "a.-1000") is None
-        assert get_at(d, "a.-999999") is None
-        # Should not raise, just return default
-    
-    def test_negative_index_chaining(self):
-        """Chaining multiple negative index operations."""
-        d = {"levels": [[[1, 2], [3, 4]], [[5, 6], [7, 8]]]}
-        # Navigate through multiple levels using negative indices
-        assert get_at(d, "levels.-1.-1.-1") == 8
-        assert get_at(d, "levels.-1.-1.-2") == 7
-        assert get_at(d, "levels.-2.-1.-1") == 4
-    
+        with pytest.raises(PathError):
+            get_at(d, "a.-1000")
+        with pytest.raises(PathError):
+            get_at(d, "a.-999999")
+        # With default, returns default
+        assert get_at(d, "a.-1000", default="missing") == "missing"
+
     def test_negative_index_after_list_mutation(self):
         """Negative index behavior after list mutations."""
         d = {"items": [1, 2, 3, 4, 5]}
@@ -235,5 +163,64 @@ class TestNegativeIndexEdgeCases:
         assert get_at(d, "items.-2") == 4
         assert get_at(d, "items.-4") == 1
         # -5 should now be out of bounds
-        assert get_at(d, "items.-5") is None
+        with pytest.raises(PathError):
+            get_at(d, "items.-5")
+
+
+class TestMissingEdgeCases:
+    """Additional edge cases for comprehensive coverage."""
+
+    def test_get_empty_path_raises(self):
+        """Empty path should raise EMPTY_PATH error."""
+        with pytest.raises(PathError) as exc:
+            get_at({}, "")
+        assert exc.value.code == PathErrorCode.EMPTY_PATH
+
+    def test_set_empty_path_raises(self):
+        """Empty path should raise EMPTY_PATH error for set_at."""
+        with pytest.raises(PathError) as exc:
+            set_at({}, "", 1)
+        assert exc.value.code == PathErrorCode.EMPTY_PATH
+
+    def test_delete_empty_path_raises(self):
+        """Empty path should raise EMPTY_PATH error for delete_at."""
+        with pytest.raises(PathError) as exc:
+            delete_at({}, "")
+        assert exc.value.code == PathErrorCode.EMPTY_PATH
+
+    def test_set_non_container_root_raises(self):
+        """Setting on non-container root should raise NON_NAVIGABLE_TYPE."""
+        with pytest.raises(PathError) as exc:
+            set_at(42, "a", 1)
+        assert exc.value.code == PathErrorCode.NON_NAVIGABLE_TYPE
+
+    def test_get_non_container_root_raises(self):
+        """Getting from non-container root should raise NON_NAVIGABLE_TYPE."""
+        with pytest.raises(PathError) as exc:
+            get_at(42, "a")
+        assert exc.value.code == PathErrorCode.NON_NAVIGABLE_TYPE
+
+    def test_delete_non_container_root_raises(self):
+        """Deleting from non-container root should raise NON_NAVIGABLE_TYPE."""
+        with pytest.raises(PathError) as exc:
+            delete_at(42, "a")
+        assert exc.value.code == PathErrorCode.NON_NAVIGABLE_TYPE
+
+    def test_get_from_set_raises(self):
+        """Accessing set elements should raise NON_NAVIGABLE_TYPE."""
+        with pytest.raises(PathError) as exc:
+            get_at({"a": {1, 2, 3}}, "a.0")
+        assert exc.value.code == PathErrorCode.NON_NAVIGABLE_TYPE
+
+    def test_get_from_frozenset_raises(self):
+        """Accessing frozenset elements should raise NON_NAVIGABLE_TYPE."""
+        with pytest.raises(PathError) as exc:
+            get_at({"a": frozenset([1, 2, 3])}, "a.0")
+        assert exc.value.code == PathErrorCode.NON_NAVIGABLE_TYPE
+
+    def test_set_into_string_raises(self):
+        """Setting into a string should raise NON_NAVIGABLE_TYPE."""
+        with pytest.raises(PathError) as exc:
+            set_at({"a": "hello"}, "a.0", "x")
+        assert exc.value.code == PathErrorCode.NON_NAVIGABLE_TYPE
 

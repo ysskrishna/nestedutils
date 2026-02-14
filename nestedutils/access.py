@@ -1,36 +1,50 @@
-from typing import Any, List, Literal, Union
-from .exceptions import PathError
-from .enums import PathErrorCode, FillStrategy
-from .helpers import normalize_path, navigate, create_container, fill_list_gaps, ensure_container_at_index
-from .helpers import is_int_key, resolve_write_index
+from typing import Any, List, Union
+from nestedutils.exceptions import PathError
+from nestedutils.enums import PathErrorCode
+from nestedutils.helpers import (
+    normalize_path,
+    navigate_one_step,
+    navigate_to_parent,
+    set_final_value,
+    navigate_to_parent_for_delete,
+    delete_from_container,
+    MISSING,
+)
 
 
-def get_at(data: Any, path: Union[str, List[Any]], default: Any = None) -> Any:
+def get_at(data: Any, path: Union[str, List[Any]], *, default: Any = MISSING) -> Any:
     """Retrieve a value from a nested data structure.
     
     Navigates through nested dictionaries, lists, and tuples using a path specified as either
-    a dot-notation string or a list of keys/indices. Returns ``default`` if the path does not
-    exist or an index is out of bounds (positive or negative). Supports negative indexing for
-    lists and tuples.
+    a dot-notation string or a list of keys/indices. By default, raises PathError if the path
+    does not exist. Use the `default` parameter to return a value instead of raising.
+    Supports negative indexing for lists and tuples.
     
     Args:
         data: The data structure to navigate (dict, list, tuple, or nested combinations).
         path: Path to the value. Accepts either a dot-separated string (e.g., "a.b.0.name") or
             a list of keys/indices (e.g., ["a", "b", 0, "name"]). Indices may be integers or
             strings representing integers (including negative indices).
-        default: Value to return if the path does not exist (default: None).
+        default: Value to return if the path does not exist. If not provided, raises PathError
+            for missing paths.
     
     Returns:
-        The value at the specified path, or ``default`` if the path does not exist.
+        The value at the specified path, or ``default`` if the path does not exist and
+        ``default`` is provided.
     
     Raises:
-        PathError: If the path is malformed, empty, or contains empty keys.
+        PathError: If the path is malformed, empty, contains empty keys, or path doesn't exist
+            (when default is not provided).
     
     Examples:
         ```python
         data = {"a": {"b": {"c": 5}}}
         get_at(data, "a.b.c")  # Returns: 5
         
+        # Missing paths raise by default
+        get_at(data, "a.b.d")  # Raises: PathError
+        
+        # Explicit default for optional values
         get_at(data, "a.b.d", default=99)  # Returns: 99
         
         data = {"items": [{"name": "apple"}, {"name": "banana"}]}
@@ -46,12 +60,14 @@ def get_at(data: Any, path: Union[str, List[Any]], default: Any = None) -> Any:
     """
     keys = normalize_path(path)
     current = data
-    MISSING = object()
     
     for key in keys:
-        current = navigate(current, key, MISSING)
-        if current is MISSING:
-            return default
+        current = navigate_one_step(
+            current,
+            key,
+            default=default,
+            raise_on_missing=(default is MISSING)
+        )
     
     return current
 
@@ -60,8 +76,11 @@ def exists_at(data: Any, path: Union[str, List[Any]]) -> bool:
     """Check if a path exists in a nested data structure.
     
     Navigates through nested dictionaries, lists, and tuples. Returns True if the full path
-    exists, False otherwise (including for any out-of-bounds index, positive or negative).
-    Supports negative indexing for lists and tuples.
+    exists and is accessible, False otherwise (including out-of-bounds indices). Supports
+    negative indexing for lists and tuples.
+    
+    This function never raises PathError for missing paths - it returns False instead.
+    PathError is only raised for malformed paths.
     
     Args:
         data: The data structure to navigate (dict, list, tuple, or nested combinations).
@@ -69,10 +88,10 @@ def exists_at(data: Any, path: Union[str, List[Any]]) -> bool:
             list of keys/indices (e.g., ["a", "b", 0, "name"]).
     
     Returns:
-        True if the path exists, False otherwise.
+        True if the path exists and is accessible, False otherwise.
     
     Raises:
-        PathError: If the path is malformed, empty, or contains empty keys.
+        PathError: Only if the path format is invalid (empty, malformed, exceeds max depth).
     
     Examples:
         ```python
@@ -89,163 +108,109 @@ def exists_at(data: Any, path: Union[str, List[Any]]) -> bool:
         data = (10, 20, 30)
         exists_at(data, "2")  # Returns: True
         exists_at(data, "5")  # Returns: False
+        
+        # Even None values return True if path exists
+        data = {"a": {"b": None}}
+        exists_at(data, "a.b")  # Returns: True
+        exists_at(data, "a.b.c")  # Returns: False (can't navigate into None)
         ```
     """
-    keys = normalize_path(path)
-    current = data
-    MISSING = object()
-    
-    for key in keys:
-        current = navigate(current, key, MISSING)
-        if current is MISSING:
+    try:
+        get_at(data, path)  # No default provided, so raises on missing path
+        return True
+    except PathError as e:
+        # Return False for "not found" errors or navigation into non-navigable types
+        if e.code in (PathErrorCode.MISSING_KEY, PathErrorCode.INVALID_INDEX, PathErrorCode.NON_NAVIGABLE_TYPE):
             return False
-    
-    return True
+        # Re-raise for path format errors and any other errors
+        raise
 
 
 def set_at(
     data: Any,
     path: Union[str, List[Any]],
     value: Any,
-    fill_strategy: Literal["auto", "none", "dict", "list"] = "auto"
+    *,
+    create: bool = False
 ) -> None:
-    """Set a value in a nested data structure, creating intermediate containers as needed.
+    """Set a value in a nested data structure.
     
-    Navigates to the specified path and sets the value, automatically creating missing
-    intermediate dictionaries or lists according to ``fill_strategy``.
+    Navigates to the specified path and sets the value. By default (create=False),
+    raises PathError if any intermediate key is missing. With create=True, automatically
+    creates missing intermediate containers (dicts for string keys, lists for numeric keys).
     
     List indexing rules:
-        - Non-negative indices can extend the list, filling gaps as needed.
-        - Negative indices can only modify existing elements (no extension allowed).
-        - Out-of-bounds negative indices raise PathError.
+    - Positive indices can append (index == len(list)) but NOT create gaps (index > len(list))
+    - Negative indices can only modify existing elements
+    - Out-of-bounds negative indices raise PathError
+    - Index cannot exceed MAX_LIST_SIZE (10000)
     
     Args:
-        data: The mutable data structure to modify (dict or list). Intermediate containers are
-            created automatically, but the root must be mutable.
+        data: The mutable data structure to modify (dict or list). The root container
+            must already exist and be mutable.
         path: Path where to set the value. Accepts either a dot-separated string (e.g., "a.b.0.name")
             or a list of keys/indices (e.g., ["a", "b", 0, "name"]).
         value: The value to set at the specified path.
-        fill_strategy: Controls how missing intermediate containers are created. Must be one of:
-            - 'auto' (default): creates {} for dict keys, [] for list indices, and None for sparse
-              list gaps.
-            - 'none': fills sparse list gaps with None.
-            - 'dict': always creates dictionaries {} for missing containers.
-            - 'list': always creates lists [] for missing containers.
+        create: If True, automatically create missing intermediate containers.
+            If False (default), raise PathError if path doesn't exist.
     
     Returns:
         None. The function modifies ``data`` in place.
     
     Raises:
-        PathError: If the path is malformed, empty, attempts to modify a tuple, uses an invalid
-            fill_strategy, or uses an out-of-bounds negative index.
-    
-    Note:
-        When extending lists with gaps (e.g., setting index 5 on a list of length 2),
-        intermediate positions are filled based on ``fill_strategy`` ('auto' and 'none' use None;
-        'dict' uses {}; 'list' uses []).
+        PathError: If path is malformed, path doesn't exist (when create=False),
+            attempts to modify tuple, uses out-of-bounds negative index, or would
+            create sparse list.
     
     Examples:
         ```python
-        data = {}
-        set_at(data, "user.profile.name", "Alice")
+        # create=False (default) - path must exist
+        data = {"user": {"profile": {}}}
+        set_at(data, "user.profile.name", "Alice")  # OK - path exists
         # data is now: {'user': {'profile': {'name': 'Alice'}}}
         
         data = {}
-        set_at(data, "items.0.name", "Item 1")
-        # data is now: {'items': [{'name': 'Item 1'}]}
+        set_at(data, "user.name", "Bob")  # PathError - path doesn't exist
         
+        # create=True - auto-create missing parts
         data = {}
-        set_at(data, "items.5", "last", fill_strategy="none")
-        # data is now: {'items': [None, None, None, None, None, 'last']}
+        set_at(data, "user.profile.name", "Alice", create=True)
+        # data is now: {'user': {'profile': {'name': 'Alice'}}}
         
+        # List operations - sequential only (no gaps)
         data = {}
-        set_at(data, "items.2.sub.value", 42)  # 'auto' creates dict at target index, None for gaps
-        # data is now: {'items': [None, None, {'sub': {'value': 42}}]}
+        set_at(data, "items.0", "first", create=True)  # OK - creates list
+        # data is now: {'items': ['first']}
         
-        data = [1, 2, 3]
-        set_at(data, "5", 99)  # extends with None gaps
-        # data is now: [1, 2, 3, None, None, 99]
+        set_at(data, "items.1", "second", create=True)  # OK - appends
+        # data is now: {'items': ['first', 'second']}
         
-        set_at(data, "-1", 100)  # modifies existing last element
-        # data is now: [1, 2, 3, None, None, 100]
+        set_at(data, "items.5", "x", create=True)  # PathError - would create gap
+        
+        # Negative indices - modify existing only
+        data = {"items": [1, 2, 3]}
+        set_at(data, "items.-1", 99)  # OK - modifies last element
+        # data is now: {'items': [1, 2, 99]}
+        
+        set_at(data, "items.-5", 0)  # PathError - out of bounds
+        
+        # Modifying existing nested structures
+        data = {"a": [{"x": 1}]}
+        set_at(data, "a.0.y", 2, create=True)  # Adds key to existing dict
+        # data is now: {'a': [{'x': 1, 'y': 2}]}
         ```
     """
-    try:
-        strategy = FillStrategy(fill_strategy)
-    except ValueError:
-        valid = {s.value for s in FillStrategy}
-        raise PathError(
-            f"Invalid fill_strategy: {fill_strategy}. Valid: {valid}",
-            PathErrorCode.INVALID_FILL_STRATEGY
-        )
-    
     keys = normalize_path(path)
-    current = data
     
-    # Navigate intermediate keys
-    for i, key in enumerate(keys[:-1]):
-        next_key = keys[i + 1]
-        
-        if isinstance(current, dict):
-            if key not in current or current[key] is None:
-                current[key] = create_container(strategy, next_key)
-            current = current[key]
-        
-        elif isinstance(current, list):
-            if not is_int_key(key):
-                raise PathError(
-                    f"Expected numeric index, got '{key}'",
-                    PathErrorCode.INVALID_INDEX
-                )
-            
-            idx = resolve_write_index(current, key, allow_extension=True)
-            fill_list_gaps(current, idx, strategy)
-            ensure_container_at_index(current, idx, strategy, next_key)
-            current = current[idx]
-        
-        elif isinstance(current, tuple):
-            raise PathError(
-                "Cannot modify tuple (immutable)",
-                PathErrorCode.IMMUTABLE_CONTAINER
-            )
-        
-        else:
-            raise PathError(
-                f"Cannot navigate into {type(current).__name__}",
-                PathErrorCode.INVALID_PATH
-            )
-    
-    # Set final value
-    final_key = keys[-1]
-    
-    if isinstance(current, dict):
-        current[final_key] = value
-    
-    elif isinstance(current, list):
-        if not is_int_key(final_key):
-            raise PathError(
-                f"Expected numeric index, got '{final_key}'",
-                PathErrorCode.INVALID_INDEX
-            )
-        
-        idx = resolve_write_index(current, final_key, allow_extension=True)
-        
-        while len(current) <= idx:
-            current.append(None)
-        
-        current[idx] = value
-    
-    elif isinstance(current, tuple):
-        raise PathError(
-            "Cannot modify tuple (immutable)",
-            PathErrorCode.IMMUTABLE_CONTAINER
-        )
-    
+    if len(keys) == 1:
+        # Single key - set directly on root
+        set_final_value(data, keys[0], value, create=create)
     else:
-        raise PathError(
-            f"Cannot set value in {type(current).__name__}",
-            PathErrorCode.INVALID_PATH
-        )
+        # Navigate to parent, then set final value
+        intermediate_keys = keys[:-1]
+        final_key = keys[-1]
+        parent = navigate_to_parent(data, intermediate_keys, final_key, create=create)
+        set_final_value(parent, final_key, value, create=create)
 
 
 def delete_at(
@@ -293,69 +258,13 @@ def delete_at(
         ```
     """
     keys = normalize_path(path)
-    current = data
     
-    # Navigate to parent
-    for key in keys[:-1]:
-        if isinstance(current, dict):
-            if key not in current:
-                raise PathError(
-                    f"Key not found: '{key}'",
-                    PathErrorCode.MISSING_KEY
-                )
-            current = current[key]
-        
-        elif isinstance(current, (list, tuple)):
-            if not is_int_key(key):
-                raise PathError(
-                    f"Expected numeric index, got '{key}'",
-                    PathErrorCode.INVALID_INDEX
-                )
-            
-            idx = resolve_write_index(current, key, allow_extension=False)
-            current = current[idx]
-        
-        else:
-            raise PathError(
-                f"Cannot navigate through {type(current).__name__}",
-                PathErrorCode.INVALID_PATH
-            )
-    
-    # Delete final key
-    final_key = keys[-1]
-    
-    if isinstance(current, dict):
-        if final_key not in current:
-            raise PathError(
-                f"Key not found: '{final_key}'",
-                PathErrorCode.MISSING_KEY
-            )
-        return current.pop(final_key)
-    
-    elif isinstance(current, list):
-        if not allow_list_mutation:
-            raise PathError(
-                "List deletion disabled. Set allow_list_mutation=True",
-                PathErrorCode.INVALID_PATH
-            )
-        
-        if not is_int_key(final_key):
-            raise PathError(
-                f"Expected numeric index, got '{final_key}'",
-                PathErrorCode.INVALID_INDEX
-            )
-        
-        idx = resolve_write_index(current, final_key, allow_extension=False)
-        return current.pop(idx)
-    
-    elif isinstance(current, tuple):
-        raise PathError(
-            "Cannot delete from tuple (immutable)",
-            PathErrorCode.IMMUTABLE_CONTAINER
-        )
-    
+    if len(keys) == 1:
+        # Single key - delete directly from root
+        return delete_from_container(data, keys[0], allow_list_mutation=allow_list_mutation)
     else:
-        raise PathError(
-            f"Cannot delete from {type(current).__name__}",
-            PathErrorCode.INVALID_PATH
-        )
+        # Navigate to parent, then delete final key
+        intermediate_keys = keys[:-1]
+        final_key = keys[-1]
+        parent = navigate_to_parent_for_delete(data, intermediate_keys)
+        return delete_from_container(parent, final_key, allow_list_mutation=allow_list_mutation)

@@ -13,6 +13,7 @@ nav:
   - Home: index.md
   - Interactive Demo: demo.md
   - API Reference: api-reference.md
+  - Migration Guide (v1 → v2): migration-v1-to-v2.md
   - Contributing: CONTRIBUTING.md
   - Changelog: CHANGELOG.md
   - License: LICENSE.md

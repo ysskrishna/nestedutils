@@ -35,11 +35,17 @@ class TestGetBasic:
         # Can also get deeper values
         assert get_at(data, "user.profile.address.city") == "SF"
     
-    def test_get_missing_returns_default(self):
-        """Get missing key returns default value."""
+    def test_get_missing_raises_error(self):
+        """Get missing key raises PathError by default."""
+        d = {"a": {"b": 1}}
+        with pytest.raises(PathError) as exc_info:
+            get_at(d, "a.c")
+        assert exc_info.value.code == PathErrorCode.MISSING_KEY
+    
+    def test_get_missing_with_default(self):
+        """Get missing key returns default when explicitly provided."""
         d = {"a": {"b": 1}}
         assert get_at(d, "a.c", default=99) == 99
-        assert get_at(d, "x.y.z") is None
         assert get_at(d, "x.y.z", default="missing") == "missing"
     
     def test_get_list_index(self):
@@ -64,11 +70,12 @@ class TestGetBasic:
         assert get_at(d, "items.-1") == {"name": "banana"}
     
     def test_get_negative_index_out_of_bounds(self):
-        """Get with out-of-bounds negative index returns default."""
+        """Get with out-of-bounds negative index raises PathError by default."""
         d = {"items": [{"name": "apple"}, {"name": "banana"}]}
-        assert get_at(d, "items.-5.name") is None
+        with pytest.raises(PathError) as exc_info:
+            get_at(d, "items.-5.name")
+        assert exc_info.value.code == PathErrorCode.INVALID_INDEX
         assert get_at(d, "items.-5.name", default="not found") == "not found"
-        assert get_at(d, "items.-10") is None
     
     def test_get_negative_index_deeply_nested(self):
         """Get with negative index in deeply nested structure."""
@@ -84,20 +91,28 @@ class TestGetBasic:
         assert get_at(d, "a.0.b") == 1
     
     def test_get_list_index_out_of_bounds(self):
-        """Get from out-of-bounds list index returns default."""
+        """Get from out-of-bounds list index raises PathError by default."""
         d = {"a": [10, 20]}
-        assert get_at(d, "a.5") is None
+        with pytest.raises(PathError) as exc_info:
+            get_at(d, "a.5")
+        assert exc_info.value.code == PathErrorCode.INVALID_INDEX
         assert get_at(d, "a.5", default=-1) == -1
-        assert get_at(d, "a.-10") is None
+        with pytest.raises(PathError):
+            get_at(d, "a.-10")
         # Test both positive and negative out-of-bounds
-        assert get_at(d, "a.100") is None
-        assert get_at(d, "a.-100") is None
-        assert get_at(d, "a.-3") is None  # Just out of bounds for length 2
+        with pytest.raises(PathError):
+            get_at(d, "a.100")
+        with pytest.raises(PathError):
+            get_at(d, "a.-100")
+        with pytest.raises(PathError):
+            get_at(d, "a.-3")  # Just out of bounds for length 2
     
     def test_get_list_index_non_integer(self):
-        """Get with non-integer key on list returns default."""
+        """Get with non-integer key on list raises PathError by default."""
         d = {"a": [1]}
-        assert get_at(d, "a.x") is None
+        with pytest.raises(PathError) as exc_info:
+            get_at(d, "a.x")
+        assert exc_info.value.code == PathErrorCode.INVALID_INDEX
         assert get_at(d, "a.x", default="not found") == "not found"
 
 
@@ -139,24 +154,26 @@ class TestGetPathNormalization:
         d = {"a.b": {"c.d": 10}}
         assert get_at(d, ["a.b", "c.d"]) == 10
     
-    def test_complex_keys_in_list_form(self):
-        """List form handles any key type: special characters, dots, integers."""
+    def test_integer_vs_string_key_distinction(self):
+        """List form handles any key type: special characters, dots, integers (preserved or converted)."""
         # Create data structure with complex keys
         data = {
             "user-info": {
                 "first.name": {
-                    123: "found it!"
+                    "123": "string_key_value",  # String key
+                    123: "int_key_value"  # Integer key
                 }
             }
         }
         
         # Verify each level works independently
-        assert get_at(data, ["user-info"]) == {"first.name": {123: "found it!"}}
-        assert get_at(data, ["user-info", "first.name"]) == {123: "found it!"}
+        assert get_at(data, ["user-info"]) == {"first.name": {"123": "string_key_value", 123: "int_key_value"}}
+        assert get_at(data, ["user-info", "first.name"]) == {"123": "string_key_value", 123: "int_key_value"}
         
-        # String form cannot handle these keys (dots would be interpreted as separators)
-        # But list form works perfectly
-        assert get_at(data, ["user-info", "first.name", 123]) == "found it!"
+        # Integer in path accesses integer key (preserved)
+        assert get_at(data, ["user-info", "first.name", 123]) == "int_key_value"
+        # String in path accesses string key
+        assert get_at(data, ["user-info", "first.name", "123"]) == "string_key_value"
         
         # Test with default for missing path
         assert get_at(data, ["user-info", "first.name", 999], default="not found") == "not found"
@@ -166,15 +183,22 @@ class TestGetEdgeCases:
     """Edge cases for get_at."""
     
     def test_get_empty_dict(self):
-        """Get from empty dict."""
+        """Get from empty dict raises PathError by default."""
         d = {}
-        assert get_at(d, "a") is None
-        assert get_at(d, "a.b.c") is None
+        with pytest.raises(PathError):
+            get_at(d, "a")
+        with pytest.raises(PathError):
+            get_at(d, "a.b.c")
+        # With default, returns default
+        assert get_at(d, "a", default=None) is None
+        assert get_at(d, "a.b.c", default="missing") == "missing"
     
     def test_get_empty_list(self):
-        """Get from empty list."""
+        """Get from empty list raises PathError by default."""
         d = {"a": []}
-        assert get_at(d, "a.0") is None
+        with pytest.raises(PathError):
+            get_at(d, "a.0")
+        assert get_at(d, "a.0", default=None) is None
     
     def test_get_none_value(self):
         """Get None value explicitly stored."""
@@ -182,28 +206,34 @@ class TestGetEdgeCases:
         assert get_at(d, "a") is None
     
     def test_none_blocks_navigation(self):
-        """None as intermediate value should block navigation and return default."""
+        """None as intermediate value should block navigation and raise PathError by default."""
         # None at first level blocks further navigation
         d = {"a": None}
-        assert get_at(d, "a.b") is None
+        with pytest.raises(PathError):
+            get_at(d, "a.b")
         assert get_at(d, "a.b", default="missing") == "missing"
-        assert get_at(d, "a.b.c") is None
+        with pytest.raises(PathError):
+            get_at(d, "a.b.c")
         assert get_at(d, "a.b.c", default=99) == 99
         
         # None at deeper level also blocks navigation
         d2 = {"a": {"b": None}}
-        assert get_at(d2, "a.b.c") is None
+        with pytest.raises(PathError):
+            get_at(d2, "a.b.c")
         assert get_at(d2, "a.b.c", default="not found") == "not found"
-        assert get_at(d2, "a.b.c.d.e") is None
+        with pytest.raises(PathError):
+            get_at(d2, "a.b.c.d.e")
         
         # None in list should also block navigation
         d3 = {"items": [None, {"name": "apple"}]}
-        assert get_at(d3, "items.0.name") is None
+        with pytest.raises(PathError):
+            get_at(d3, "items.0.name")
         assert get_at(d3, "items.0.name", default="no name") == "no name"
         
         # None in nested structure
         d4 = {"data": {"user": None, "other": {"value": 42}}}
-        assert get_at(d4, "data.user.name") is None
+        with pytest.raises(PathError):
+            get_at(d4, "data.user.name")
         assert get_at(d4, "data.user.name", default="default") == "default"
         # But other paths should still work
         assert get_at(d4, "data.other.value") == 42
@@ -224,37 +254,31 @@ class TestGetEdgeCases:
         d = {"a": ""}
         assert get_at(d, "a") == ""
     
-    def test_get_very_deep_nesting(self):
-        """Get from very deeply nested structure."""
-        d = {"a": {"b": {"c": {"d": {"e": {"f": {"g": 42}}}}}}}
-        assert get_at(d, "a.b.c.d.e.f.g") == 42
-    
     def test_get_from_dict_with_numeric_keys(self):
         """Get from dict with numeric string keys."""
         d = {"0": {"1": {"2": 5}}}
         assert get_at(d, "0.1.2") == 5
     
     def test_get_dict_with_integer_vs_string_keys(self):
-        """Test that integer and string keys are correctly distinguished.
+        """Test that integer keys in paths are preserved and can access integer dict keys.
         
-        The library correctly preserves key types in list form paths, allowing
-        access to both integer keys and string keys with the same numeric value.
+        normalize_path() now preserves integer types from list paths, allowing
+        dictionaries with integer keys to be accessed using integer values in paths.
         """
         # Dictionary with both integer key and string key
         data = {0: "int_value", "0": "string_value"}
         
-        # Using integer in path accesses integer key
-        assert get_at(data, [0]) == "int_value"
+        # Integer in path accesses integer key
+        assert get_at(data, [0]) == "int_value"  # Preserves int, accesses int key
+        # String in path accesses string key
+        assert get_at(data, ["0"]) == "string_value"  # String accesses string key
         
-        # Using string in path accesses string key
-        assert get_at(data, ["0"]) == "string_value"
-        
-        # Verify direct access matches
+        # Verify direct access still distinguishes
         assert data[0] == "int_value"
         assert data["0"] == "string_value"
         
-        # Both keys are distinct and accessible
-        assert get_at(data, [0]) != get_at(data, ["0"])
+        # List paths now distinguish between integer and string keys
+        assert get_at(data, [0]) != get_at(data, ["0"])  # Different keys, different values
     
     def test_get_mixed_types(self):
         """Get from structure with mixed types."""

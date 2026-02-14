@@ -1,7 +1,7 @@
 ---
 title: API Reference
 
-description: "Complete API reference for nestedutils. Documentation for get_at, set_at, delete_at, and exists_at functions with parameters, return values, examples, and error handling."
+description: "Complete API reference for nestedutils. Documentation for get_at, set_at, delete_at, exists_at, get_depth, count_leaves, and get_all_paths functions with parameters, return values, examples, and error handling."
 
 keywords:
   - nestedutils API
@@ -10,6 +10,9 @@ keywords:
   - set_at
   - delete_at
   - exists_at
+  - get_depth
+  - count_leaves
+  - get_all_paths
   - function documentation
   - nested data functions
   - Python API
@@ -31,6 +34,16 @@ keywords:
         - exists_at
       heading_level: 3
 
+::: nestedutils.introspection
+    options:
+      show_root_heading: true
+      show_root_toc_entry: false
+      members:
+        - get_depth
+        - count_leaves
+        - get_all_paths
+      heading_level: 3
+
 ::: nestedutils.constants
     options:
       show_root_heading: true
@@ -48,7 +61,6 @@ keywords:
       heading_level: 3
       members:
         - PathErrorCode
-        - FillStrategy
       members_order: source
       show_if_no_docstring: true
 

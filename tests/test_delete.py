@@ -38,12 +38,12 @@ class TestDeleteBasic:
 class TestDeleteListOperations:
     """Tests for deleting from lists."""
     
-    def test_delete_list_index_disallowed(self):
+    def test_delete_list_requires_allow_list_mutation_flag(self):
         """Delete list index without allow_list_mutation should fail."""
         d = {"a": [1, 2, 3]}
         with pytest.raises(PathError) as exc_info:
             delete_at(d, "a.1")
-        assert exc_info.value.code == PathErrorCode.INVALID_PATH
+        assert exc_info.value.code == PathErrorCode.OPERATION_DISABLED
     
     def test_delete_list_index_allowed(self):
         """Delete list index with allow_list_mutation=True."""
@@ -148,14 +148,14 @@ class TestDeleteErrorCases:
         d = {"a": 5}
         with pytest.raises(PathError) as exc_info:
             delete_at(d, "a.b")
-        assert exc_info.value.code == PathErrorCode.INVALID_PATH
-    
+        assert exc_info.value.code == PathErrorCode.NON_NAVIGABLE_TYPE
+
     def test_delete_from_none(self):
         """Delete from None should fail."""
         d = {"a": None}
         with pytest.raises(PathError) as exc_info:
             delete_at(d, "a.b")
-        assert exc_info.value.code == PathErrorCode.INVALID_PATH
+        assert exc_info.value.code == PathErrorCode.NON_NAVIGABLE_TYPE
     
     def test_delete_from_tuple(self):
         """Delete from tuple should fail (immutable)."""
@@ -206,14 +206,14 @@ class TestDeleteComplex:
         """Delete value that was just set."""
         d = {}
         from nestedutils import set_at
-        set_at(d, "a.b.c", 1)
+        set_at(d, "a.b.c", 1, create=True)
         val = delete_at(d, "a.b.c")
         assert val == 1
         assert d == {"a": {"b": {}}}
 
 
-class TestDeleteInvalidPaths:
-    """Tests for invalid path types in delete_at."""
+class TestDeletePathFormats:
+    """Tests for different path formats in delete_at."""
     
     def test_delete_path_as_list(self):
         """Delete using list form path."""
