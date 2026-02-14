@@ -36,9 +36,9 @@ Try the `nestedutils` library directly in your browser! This page uses [Pyodide]
       <div class="panel-header">
         <span class="panel-title">Data</span>
         <div class="example-buttons">
-          <button class="example-btn active" data-example="example1">User Profile</button>
-          <button class="example-btn" data-example="example2">E-commerce</button>
-          <button class="example-btn" data-example="example3">API Response</button>
+          <button class="example-btn active" data-example="example1">Config File</button>
+          <button class="example-btn" data-example="example2">API Response</button>
+          <button class="example-btn" data-example="example3">Event Log</button>
           <button class="example-btn" data-example="custom">Custom</button>
         </div>
       </div>
@@ -63,10 +63,6 @@ Try the `nestedutils` library directly in your browser! This page uses [Pyodide]
         <div class="stat-item">
           <span class="stat-label">Leaves</span>
           <span class="stat-value" id="stat-leaves">-</span>
-        </div>
-        <div class="stat-item">
-          <span class="stat-label">Paths</span>
-          <span class="stat-value" id="stat-paths">-</span>
         </div>
       </div>
     </div>
@@ -872,15 +868,12 @@ Try the `nestedutils` library directly in your browser! This page uses [Pyodide]
     try {
       const depth = pyodide.runPython(`get_depth(data)`);
       const leaves = pyodide.runPython(`count_leaves(data)`);
-      const paths = pyodide.runPython(`len(get_all_paths(data))`);
 
       document.getElementById("stat-depth").textContent = depth;
       document.getElementById("stat-leaves").textContent = leaves;
-      document.getElementById("stat-paths").textContent = paths;
     } catch (e) {
       document.getElementById("stat-depth").textContent = "-";
       document.getElementById("stat-leaves").textContent = "-";
-      document.getElementById("stat-paths").textContent = "-";
     }
   }
 
@@ -969,64 +962,48 @@ Try the `nestedutils` library directly in your browser! This page uses [Pyodide]
 
     switch(exampleType) {
       case "example1":
+        // Config File - Deep nesting with various types
         exampleCode = `
 data = {
-  "user": {
-    "name": "John Doe",
-    "age": 30,
-    "profile": {
-      "email": "john@example.com",
-      "bio": "Software developer",
-      "address": {
-        "street": "123 Main St",
-        "city": "San Francisco",
-        "zip": "94102"
+  "app": {
+    "name": "MyApp",
+    "version": "2.0.1",
+    "debug": False
+  },
+  "database": {
+    "primary": {
+      "host": "localhost",
+      "port": 5432,
+      "credentials": {
+        "username": "admin",
+        "password": None
       }
     },
-    "preferences": {
-      "theme": "dark",
-      "notifications": True,
-      "language": "en"
+    "replica": {
+      "host": "replica.db.local",
+      "port": 5432,
+      "readonly": True
     }
   },
-  "items": [
-    {"id": 1, "title": "First Item", "tags": ["python", "demo"]},
-    {"id": 2, "title": "Second Item", "tags": ["javascript"]}
-  ]
+  "features": {
+    "authentication": {
+      "enabled": True,
+      "providers": ["google", "github", "email"],
+      "session_timeout": 3600
+    },
+    "analytics": {
+      "enabled": False,
+      "tracking_id": None
+    }
+  },
+  "logging": {
+    "level": "info",
+    "outputs": ["console", "file"]
+  }
 }`;
         break;
       case "example2":
-        exampleCode = `
-data = {
-  "store": {
-    "name": "TechShop",
-    "location": "New York"
-  },
-  "products": [
-    {
-      "id": 101,
-      "name": "Laptop",
-      "price": 999.99,
-      "inventory": {"stock": 45, "warehouse": "A1"},
-      "reviews": [
-        {"rating": 5, "comment": "Great product!"},
-        {"rating": 4, "comment": "Good value"}
-      ]
-    },
-    {
-      "id": 102,
-      "name": "Mouse",
-      "price": 29.99,
-      "inventory": {"stock": 120, "warehouse": "B2"},
-      "reviews": []
-    }
-  ],
-  "orders": [
-    {"order_id": "ORD-001", "customer": "Alice", "items": ["101", "102"], "total": 1029.98}
-  ]
-}`;
-        break;
-      case "example3":
+        // API Response - Paginated data with metadata
         exampleCode = `
 data = {
   "status": "success",
@@ -1035,19 +1012,85 @@ data = {
       {
         "id": 1,
         "username": "alice",
-        "metadata": {"created_at": "2024-01-15", "last_login": "2024-12-01"},
-        "roles": ["admin", "user"]
+        "email": "alice@example.com",
+        "profile": {
+          "avatar": "https://example.com/alice.jpg",
+          "bio": "Software Engineer"
+        },
+        "roles": ["admin", "user"],
+        "active": True
       },
       {
         "id": 2,
         "username": "bob",
-        "metadata": {"created_at": "2024-02-20", "last_login": None},
-        "roles": ["user"]
+        "email": "bob@example.com",
+        "profile": {
+          "avatar": None,
+          "bio": "Product Manager"
+        },
+        "roles": ["user"],
+        "active": False
       }
     ],
-    "pagination": {"page": 1, "per_page": 10, "total": 2}
+    "pagination": {
+      "page": 1,
+      "per_page": 10,
+      "total_pages": 5,
+      "total_items": 42
+    }
   },
-  "errors": []
+  "meta": {
+    "request_id": "req_abc123",
+    "timestamp": "2025-02-14T10:30:00Z"
+  }
+}`;
+        break;
+      case "example3":
+        // Event Log - Timestamped events with varying structures
+        exampleCode = `
+data = {
+  "events": [
+    {
+      "id": "evt_001",
+      "type": "user.login",
+      "timestamp": "2025-02-14T09:00:00Z",
+      "data": {
+        "user_id": 42,
+        "ip_address": "192.168.1.100",
+        "device": {"type": "mobile", "os": "iOS"}
+      },
+      "success": True
+    },
+    {
+      "id": "evt_002",
+      "type": "payment.processed",
+      "timestamp": "2025-02-14T09:15:00Z",
+      "data": {
+        "order_id": "ORD-789",
+        "amount": 99.99,
+        "currency": "USD",
+        "method": {"type": "card", "last4": "4242"}
+      },
+      "success": True
+    },
+    {
+      "id": "evt_003",
+      "type": "email.sent",
+      "timestamp": "2025-02-14T09:20:00Z",
+      "data": {
+        "to": "user@example.com",
+        "subject": "Order Confirmation",
+        "template": "order_confirmation_v2"
+      },
+      "success": False,
+      "error": {"code": "SMTP_TIMEOUT", "message": "Connection timed out"}
+    }
+  ],
+  "summary": {
+    "total": 3,
+    "successful": 2,
+    "failed": 1
+  }
 }`;
         break;
       case "custom":
