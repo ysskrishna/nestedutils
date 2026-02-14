@@ -168,49 +168,45 @@ Try the `nestedutils` library directly in your browser! This page uses [Pyodide]
   </div>
 
   <div class="test-section" style="margin-top: 30px;">
-    <h3>5. Introspection APIs (New in v2.0)</h3>
-    <p>Analyze the structure of your nested data:</p>
-
-    <div style="display: grid; gap: 15px; margin-top: 20px;">
-      <!-- get_depth -->
-      <div style="border: 1px solid #e0e0e0; padding: 15px; border-radius: 6px; background: #fafafa;">
-        <h4 style="margin-top: 0; margin-bottom: 10px; color: #1976d2;">get_depth</h4>
-        <p style="margin: 5px 0; font-size: 0.9em; color: #666;">Get the maximum nesting depth of your data structure.</p>
-        <button
-          id="depth-btn"
-          style="padding: 8px 16px; background: #1976d2; color: white; border: none; border-radius: 4px; cursor: pointer; margin-top: 10px;"
-        >
-          Calculate Depth
-        </button>
-        <div id="depth-result" style="margin-top: 10px; padding: 10px; background: #f5f5f5; border-radius: 4px; min-height: 30px;"></div>
-      </div>
-
-      <!-- count_leaves -->
-      <div style="border: 1px solid #e0e0e0; padding: 15px; border-radius: 6px; background: #fafafa;">
-        <h4 style="margin-top: 0; margin-bottom: 10px; color: #1976d2;">count_leaves</h4>
-        <p style="margin: 5px 0; font-size: 0.9em; color: #666;">Count the total number of leaf values (non-container values) in your data.</p>
-        <button
-          id="leaves-btn"
-          style="padding: 8px 16px; background: #1976d2; color: white; border: none; border-radius: 4px; cursor: pointer; margin-top: 10px;"
-        >
-          Count Leaves
-        </button>
-        <div id="leaves-result" style="margin-top: 10px; padding: 10px; background: #f5f5f5; border-radius: 4px; min-height: 30px;"></div>
-      </div>
-
-      <!-- get_all_paths -->
-      <div style="border: 1px solid #e0e0e0; padding: 15px; border-radius: 6px; background: #fafafa;">
-        <h4 style="margin-top: 0; margin-bottom: 10px; color: #1976d2;">get_all_paths</h4>
-        <p style="margin: 5px 0; font-size: 0.9em; color: #666;">Get all paths to leaf values in your data structure.</p>
-        <button
-          id="paths-btn"
-          style="padding: 8px 16px; background: #1976d2; color: white; border: none; border-radius: 4px; cursor: pointer; margin-top: 10px;"
-        >
-          Get All Paths
-        </button>
-        <div id="paths-result" style="margin-top: 10px; padding: 10px; background: #f5f5f5; border-radius: 4px; min-height: 30px; max-height: 300px; overflow-y: auto;"></div>
-      </div>
+    <h3>5. Get Depth (get_depth)</h3>
+    <p>Get the maximum nesting depth of your data structure:</p>
+    <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+      <button
+        id="depth-btn"
+        style="padding: 8px 16px; background: #1976d2; color: white; border: none; border-radius: 4px; cursor: pointer;"
+      >
+        Calculate Depth
+      </button>
     </div>
+    <div id="depth-result" style="margin-top: 10px; padding: 10px; background: #f5f5f5; border-radius: 4px; min-height: 30px;"></div>
+  </div>
+
+  <div class="test-section" style="margin-top: 30px;">
+    <h3>6. Count Leaves (count_leaves)</h3>
+    <p>Count the total number of leaf values (non-container values) in your data:</p>
+    <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+      <button
+        id="leaves-btn"
+        style="padding: 8px 16px; background: #1976d2; color: white; border: none; border-radius: 4px; cursor: pointer;"
+      >
+        Count Leaves
+      </button>
+    </div>
+    <div id="leaves-result" style="margin-top: 10px; padding: 10px; background: #f5f5f5; border-radius: 4px; min-height: 30px;"></div>
+  </div>
+
+  <div class="test-section" style="margin-top: 30px;">
+    <h3>7. Get All Paths (get_all_paths)</h3>
+    <p>Get all paths to leaf values in your data structure:</p>
+    <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+      <button
+        id="paths-btn"
+        style="padding: 8px 16px; background: #1976d2; color: white; border: none; border-radius: 4px; cursor: pointer;"
+      >
+        Get All Paths
+      </button>
+    </div>
+    <div id="paths-result" style="margin-top: 10px; padding: 10px; background: #f5f5f5; border-radius: 4px; min-height: 30px; max-height: 300px; overflow-y: auto;"></div>
   </div>
 
 </div>
