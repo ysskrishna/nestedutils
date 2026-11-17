@@ -1,5 +1,7 @@
 {
   "$schema": "https://context7.com/schema/context7.json",
+  "url": "https://context7.com/ysskrishna/nestedutils",
+  "public_key": "pk_VesXVq9WjBT8ecKU9XIZz",
   "projectTitle": "nestedutils",
   "description": "Zero-dependency Python library for safe dot-notation access to nested dicts, lists and tuples: get_at, set_at, delete_at and exists_at, plus get_depth, count_leaves and get_all_paths for introspection.",
   "excludeFolders": [
