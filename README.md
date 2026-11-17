@@ -7,6 +7,8 @@
 [![PyPI Downloads](https://static.pepy.tech/personalized-badge/nestedutils?period=total&units=INTERNATIONAL_SYSTEM&left_color=GREY&right_color=BLUE&left_text=downloads)](https://pepy.tech/projects/nestedutils)
 [![Documentation](https://img.shields.io/badge/docs-ysskrishna.github.io%2Fnestedutils-blue.svg)](https://ysskrishna.github.io/nestedutils/)
 [![Interactive Playground](https://img.shields.io/badge/demo-Try%20it%20now!-green.svg)](https://ysskrishna.github.io/nestedutils/playground/)
+[![Context7](https://img.shields.io/badge/Context7-docs-18181B)](https://context7.com/ysskrishna/nestedutils)
+[![Ask DeepWiki](https://img.shields.io/badge/DeepWiki-ask-18181B)](https://deepwiki.com/ysskrishna/nestedutils)
 
 The lightweight Python library for safe, simple, dot-notation access to nested dicts and lists. Effortlessly get, set, and delete values deep in your complex JSON, API responses, and config files without verbose error-checking or handling KeyError exceptions.
 
