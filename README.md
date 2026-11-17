@@ -1,12 +1,13 @@
 # Nested Utils
 
-![License](https://img.shields.io/badge/license-MIT-blue.svg)
-![Tests](https://github.com/ysskrishna/nestedutils/actions/workflows/test.yml/badge.svg)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/ysskrishna/nestedutils/blob/main/LICENSE)
+[![Tests](https://github.com/ysskrishna/nestedutils/actions/workflows/test.yml/badge.svg)](https://github.com/ysskrishna/nestedutils/actions/workflows/test.yml)
 ![Python](https://img.shields.io/badge/python-3.8%2B-blue.svg)
 [![PyPI](https://img.shields.io/pypi/v/nestedutils)](https://pypi.org/project/nestedutils/)
 [![PyPI Downloads](https://static.pepy.tech/personalized-badge/nestedutils?period=total&units=INTERNATIONAL_SYSTEM&left_color=GREY&right_color=BLUE&left_text=downloads)](https://pepy.tech/projects/nestedutils)
 [![Documentation](https://img.shields.io/badge/docs-ysskrishna.github.io%2Fnestedutils-blue.svg)](https://ysskrishna.github.io/nestedutils/)
 [![Interactive Playground](https://img.shields.io/badge/demo-Try%20it%20now!-green.svg)](https://ysskrishna.github.io/nestedutils/playground/)
+[![Author site](https://img.shields.io/badge/author-ysskrishna.space-informational)](https://ysskrishna.space)
 [![Context7](https://img.shields.io/badge/Context7-docs-18181B)](https://context7.com/ysskrishna/nestedutils)
 [![Ask DeepWiki](https://img.shields.io/badge/DeepWiki-ask-18181B)](https://deepwiki.com/ysskrishna/nestedutils)
 
@@ -94,7 +95,10 @@ delete_at(data, "user.age")
 
 ## API Reference
 
-### `get_at(data, path, *, default=...)`
+<a id="get_atdata-path--default"></a>
+
+<details>
+<summary><b><code>get_at(data, path, *, default=...)</code></b></summary>
 
 Retrieve a value from a nested data structure.
 
@@ -125,7 +129,12 @@ get_at(data, "items.1.name")  # "banana"
 get_at(data, "items.-1.name")  # "banana" (negative index)
 ```
 
-### `set_at(data, path, value, *, create=False)`
+</details>
+
+<a id="set_atdata-path-value--createfalse"></a>
+
+<details>
+<summary><b><code>set_at(data, path, value, *, create=False)</code></b></summary>
 
 Set a value in a nested data structure, optionally creating intermediate containers as needed.
 
@@ -172,7 +181,12 @@ set_at(data, "-1", 100)  # Updates existing last element
 # Creates: [1, 2, 100]
 ```
 
-### `exists_at(data, path)`
+</details>
+
+<a id="exists_atdata-path"></a>
+
+<details>
+<summary><b><code>exists_at(data, path)</code></b></summary>
 
 Check if a path exists in a nested data structure.
 
@@ -200,7 +214,12 @@ exists_at(data, "items.5.name")  # False
 exists_at(data, "items.-1.name")  # True (negative index)
 ```
 
-### `delete_at(data, path, *, allow_list_mutation=False)`
+</details>
+
+<a id="delete_atdata-path--allow_list_mutationfalse"></a>
+
+<details>
+<summary><b><code>delete_at(data, path, *, allow_list_mutation=False)</code></b></summary>
 
 Delete a value from a nested data structure.
 
@@ -229,7 +248,12 @@ delete_at(data, "items.1", allow_list_mutation=True)  # Returns 2
 # data becomes {"items": [1, 3]}
 ```
 
-### `get_depth(data)`
+</details>
+
+<a id="get_depthdata"></a>
+
+<details>
+<summary><b><code>get_depth(data)</code></b></summary>
 
 Get the maximum nesting depth of a data structure.
 
@@ -254,7 +278,12 @@ get_depth({"a": {"b": {"c": 1}}})      # 3 (deeper nesting)
 get_depth([1, [2, [3]]])               # 3 (nested lists)
 ```
 
-### `count_leaves(data)`
+</details>
+
+<a id="count_leavesdata"></a>
+
+<details>
+<summary><b><code>count_leaves(data)</code></b></summary>
 
 Count the total number of leaf values (non-container values) in a nested structure.
 
@@ -278,7 +307,12 @@ count_leaves({"a": {"b": 1, "c": 2}})  # 2 (nested, still 2 leaves)
 count_leaves([1, 2, [3, 4]])           # 4 (four leaf values)
 ```
 
-### `get_all_paths(data)`
+</details>
+
+<a id="get_all_pathsdata"></a>
+
+<details>
+<summary><b><code>get_all_paths(data)</code></b></summary>
 
 Get all paths to leaf values in a nested structure.
 
@@ -307,6 +341,8 @@ get_all_paths({"users": [{"name": "Alice"}, {"name": "Bob"}]})
 get_all_paths({})                      # [] (no leaves)
 get_all_paths(42)                      # [[]] (primitive has empty path)
 ```
+
+</details>
 
 ## Error Handling
 
@@ -338,7 +374,10 @@ except PathError as e:
 
 ## Advanced Usage
 
-### Using List Paths
+<a id="using-list-paths"></a>
+
+<details>
+<summary><b>Using List Paths</b></summary>
 
 List paths are useful when keys contain dots:
 
@@ -351,7 +390,12 @@ set_at(data, ["user.name", "last"], "Doe", create=True)
 # Creates: {"user.name": {"first": "John", "last": "Doe"}}
 ```
 
-### Negative List Indices
+</details>
+
+<a id="negative-list-indices"></a>
+
+<details>
+<summary><b>Negative List Indices</b></summary>
 
 Negative indices work like Python list indexing for reading and updating existing elements:
 
@@ -365,7 +409,12 @@ set_at(data, "items.-1", 999)  # Updates last item (must exist)
 
 **Important**: Negative indices can only reference existing elements. They cannot extend lists - attempting to use a negative index that's out of bounds will raise a `PathError`.
 
-### Working with Tuples
+</details>
+
+<a id="working-with-tuples"></a>
+
+<details>
+<summary><b>Working with Tuples</b></summary>
 
 Tuples are read-only. You can read from them but cannot modify:
 
@@ -377,7 +426,12 @@ get_at(data, "items.0")  # 1 (works)
 set_at(data, "items.0", 9)  # Raises PathError (tuples are immutable)
 ```
 
-### Handling None Values
+</details>
+
+<a id="handling-none-values"></a>
+
+<details>
+<summary><b>Handling None Values</b></summary>
 
 The library can navigate through `None` values when setting:
 
@@ -388,6 +442,8 @@ data = {"a": None}
 set_at(data, "a.b.c", 10)
 # Replaces None with container: {"a": {"b": {"c": 10}}}
 ```
+
+</details>
 
 ## Safety Limits
 
@@ -409,27 +465,39 @@ Version 2.0 introduces breaking changes to make the library safer and more predi
 
 Contributions are welcome! Please read our [Contributing Guide](https://github.com/ysskrishna/nestedutils/blob/main/CONTRIBUTING.md) for details on our code of conduct, development setup, and the process for submitting pull requests.
 
+## Built and maintained by
+
+Nested Utils is built and maintained by:
+
+| | Name | GitHub | Role |
+|---|------|--------|------|
+| <img src="https://github.com/ysskrishna.png?size=120" width="60" height="60" alt="Y. Siva Sai Krishna"> | **Y. Siva Sai Krishna** | [@ysskrishna](https://github.com/ysskrishna) | Creator |
+
+## Changelog
+
+See [CHANGELOG](CHANGELOG.md) for release history.
+
 ## Support
 
 If you find this library helpful:
 
 - ⭐ Star the repository
-- 🐛 Report issues
+- 🐛 [Report issues](https://github.com/ysskrishna/nestedutils/issues)
 - 🔀 Submit pull requests
 - 💝 [Sponsor on GitHub](https://github.com/sponsors/ysskrishna)
 
 ## License
 
-MIT © [Y. Siva Sai Krishna](https://github.com/ysskrishna) - see [LICENSE](https://github.com/ysskrishna/nestedutils/blob/main/LICENSE) file for details.
-
+MIT © [Y. Siva Sai Krishna](https://github.com/ysskrishna) — see [LICENSE](LICENSE) for details.
 
 ---
 
 <p align="left">
   <a href="https://github.com/ysskrishna">Author's GitHub</a> •
   <a href="https://linkedin.com/in/ysskrishna">Author's LinkedIn</a> •
-  <a href="https://github.com/ysskrishna/nestedutils/issues">Report Issues</a> •
+  <a href="https://ysskrishna.space">Author's site</a> •
   <a href="https://pypi.org/project/nestedutils/">Package on PyPI</a> •
   <a href="https://ysskrishna.github.io/nestedutils/">Package Documentation</a> •
-  <a href="https://ysskrishna.github.io/nestedutils/playground/">Package Playground</a>
+  <a href="https://ysskrishna.github.io/nestedutils/playground/">Package Playground</a> •
+  <a href="https://github.com/ysskrishna/nestedutils/issues">Report Issues</a>
 </p>
