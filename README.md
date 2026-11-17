@@ -92,7 +92,7 @@ delete_at(data, "user.age")
 
 ## API Reference
 
-### `get_at(data, path, *, default=None)`
+### `get_at(data, path, *, default=...)`
 
 Retrieve a value from a nested data structure.
 
@@ -100,7 +100,7 @@ Retrieve a value from a nested data structure.
 
 - `data`: The data structure to navigate (dict, list, tuple, or nested combinations)
 - `path`: Path to the value (string with dot notation or list of keys/indices)
-- `default`: Value to return if path doesn't exist (keyword-only parameter, default: `None`)
+- `default`: Value to return if path doesn't exist (keyword-only). If you leave it out, a missing path raises `PathError`
 
 **Returns:** The value at the path, or `default` if provided and path doesn't exist
 
@@ -111,6 +111,8 @@ Retrieve a value from a nested data structure.
 **Examples:**
 
 ```python
+from nestedutils import get_at, PathError
+
 data = {"a": {"b": {"c": 5}}}
 get_at(data, "a.b.c")  # 5
 get_at(data, "a.b.d")  # Raises PathError (path doesn't exist)
@@ -141,6 +143,8 @@ Set a value in a nested data structure, optionally creating intermediate contain
 **Examples:**
 
 ```python
+from nestedutils import set_at, PathError
+
 # create=True - auto-create missing containers
 data = {}
 set_at(data, "user.profile.name", "Alice", create=True)
@@ -182,6 +186,8 @@ Check if a path exists in a nested data structure.
 **Examples:**
 
 ```python
+from nestedutils import exists_at
+
 data = {"a": {"b": {"c": 5}}}
 exists_at(data, "a.b.c")  # True
 exists_at(data, "a.b.d")  # False
@@ -192,7 +198,7 @@ exists_at(data, "items.5.name")  # False
 exists_at(data, "items.-1.name")  # True (negative index)
 ```
 
-### `delete_at(data, path, allow_list_mutation=False)`
+### `delete_at(data, path, *, allow_list_mutation=False)`
 
 Delete a value from a nested data structure.
 
@@ -211,6 +217,8 @@ Delete a value from a nested data structure.
 **Examples:**
 
 ```python
+from nestedutils import delete_at
+
 data = {"a": {"b": 1, "c": 2}}
 delete_at(data, "a.b")  # Returns 1, data becomes {"a": {"c": 2}}
 
@@ -234,6 +242,8 @@ Get the maximum nesting depth of a data structure.
 **Examples:**
 
 ```python
+from nestedutils import get_depth
+
 get_depth(42)                          # 0 (primitive)
 get_depth({})                          # 1 (empty container)
 get_depth({"a": 1})                    # 1 (flat dict)
@@ -257,6 +267,8 @@ Count the total number of leaf values (non-container values) in a nested structu
 **Examples:**
 
 ```python
+from nestedutils import count_leaves
+
 count_leaves(42)                       # 1 (primitive is a leaf)
 count_leaves({})                       # 0 (empty container)
 count_leaves({"a": 1, "b": 2})         # 2 (two leaf values)
@@ -279,6 +291,8 @@ Get all paths to leaf values in a nested structure.
 **Examples:**
 
 ```python
+from nestedutils import get_all_paths
+
 get_all_paths({"a": 1, "b": 2})
 # [["a"], ["b"]]
 
@@ -297,6 +311,8 @@ get_all_paths(42)                      # [[]] (primitive has empty path)
 The library uses `PathError` exceptions with error codes for different failure scenarios:
 
 ```python
+from nestedutils import set_at
+
 from nestedutils import PathError, PathErrorCode
 
 try:
@@ -325,6 +341,8 @@ except PathError as e:
 List paths are useful when keys contain dots:
 
 ```python
+from nestedutils import set_at
+
 data = {}
 set_at(data, ["user.name", "first"], "John", create=True)
 set_at(data, ["user.name", "last"], "Doe", create=True)
@@ -336,6 +354,8 @@ set_at(data, ["user.name", "last"], "Doe", create=True)
 Negative indices work like Python list indexing for reading and updating existing elements:
 
 ```python
+from nestedutils import get_at, set_at
+
 data = {"items": [10, 20, 30]}
 get_at(data, "items.-1")  # 30 (last item)
 set_at(data, "items.-1", 999)  # Updates last item (must exist)
@@ -348,6 +368,8 @@ set_at(data, "items.-1", 999)  # Updates last item (must exist)
 Tuples are read-only. You can read from them but cannot modify:
 
 ```python
+from nestedutils import get_at, set_at, PathError
+
 data = {"items": (1, 2, 3)}
 get_at(data, "items.0")  # 1 (works)
 set_at(data, "items.0", 9)  # Raises PathError (tuples are immutable)
@@ -358,6 +380,8 @@ set_at(data, "items.0", 9)  # Raises PathError (tuples are immutable)
 The library can navigate through `None` values when setting:
 
 ```python
+from nestedutils import set_at
+
 data = {"a": None}
 set_at(data, "a.b.c", 10)
 # Replaces None with container: {"a": {"b": {"c": 10}}}

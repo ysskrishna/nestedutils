@@ -1,0 +1,33 @@
+{
+  "$schema": "https://context7.com/schema/context7.json",
+  "projectTitle": "nestedutils",
+  "description": "Zero-dependency Python library for safe dot-notation access to nested dicts, lists and tuples: get_at, set_at, delete_at and exists_at, plus get_depth, count_leaves and get_all_paths for introspection.",
+  "excludeFolders": [
+    "archive",
+    "archived",
+    "old",
+    "deprecated",
+    "legacy",
+    "tests",
+    ".github",
+    "docs",
+    "media"
+  ],
+  "excludeFiles": [
+    "CHANGELOG.md",
+    "changelog.md",
+    "LICENSE.md",
+    "license.md",
+    "CODE_OF_CONDUCT.md",
+    "NEWS.md",
+    "CONTRIBUTING.md",
+    "SECURITY.md",
+    "AGENTS.md"
+  ],
+  "rules": [
+    "Import from nestedutils: get_at, set_at, delete_at, exists_at, get_depth, count_leaves, get_all_paths, PathError.",
+    "In v2, get_at raises PathError for a missing path unless you pass default=...; see migration-v1-to-v2.md when upgrading from 1.x.",
+    "set_at needs create=True to build missing containers, and it never creates sparse lists (an index may be at most len(list)).",
+    "delete_at refuses to delete list items unless allow_list_mutation=True."
+  ]
+}
